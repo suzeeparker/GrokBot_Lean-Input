@@ -4,7 +4,6 @@
       "type": "http",
       "url": "https://mcp.apify.com/?tools=lentic_clockss/us-government-contracts-search",
       "headers": {
-        "Authorization": "Bearer apify_api_ch4deIBGI5bYrti75Pblmbti4cBOzh0eN5yu"
       }
     }
   }
