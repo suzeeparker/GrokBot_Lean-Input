@@ -1,0 +1,6 @@
+{ "folders": [
+  { "path": ".",       "name": "Grok_dev02-robin" },
+  { "path": "../._1",  "name": "Support Files"   },
+  { "path": "../data", "name": "Data Files"      }
+     ]
+  }

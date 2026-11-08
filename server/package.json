@@ -1,0 +1,31 @@
+{
+  "name": "server_apis",
+  "author": "Robin Mattern",
+  "description": "First Node.js Server1 APIs",
+  "keywords": [ ],
+  "license": "ISC",
+
+  "version": "0.1.1",
+  "main": "s01_first-api/server.mjs",
+
+  "scripts": {
+    "dev": "node s11_first-apis/0-main.mjs",
+    "start": "echo Start app inside folder: s11_first-apis",
+    "test": "echo \"Error: no test specified\" && exit 1"
+    },
+
+  "dependencies": {
+    "dotdev": "^0.1.3",
+    "express": "^5.2.1"
+    },
+  "devDependencies": { },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/{account}/{Proj}_{Stg##}-{owner}.git"
+    },
+  "bugs": {
+    "url": "https://github.com/{account}/{Proj}_{Stg##}-{owner}/issues"
+    },
+  "homepage": "https://{account}.github.io/{Proj}_{Stg##}-{owner}#readme"
+}

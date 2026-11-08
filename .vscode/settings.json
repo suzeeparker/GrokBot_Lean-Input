@@ -1,0 +1,8 @@
+{
+  "files.watcherExclude": {
+    "**/test-results/**": true,
+    "**/node_modules/**": true,
+    "**/.git/**": true,
+    "**/._/**": true
+  }
+}

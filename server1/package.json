@@ -1,0 +1,29 @@
+{
+  "name": "server_apis",
+  "author": "Robin Mattern",
+  "description": "Install node_modules for Server APIs",
+  "keywords": [ ],
+  "license": "ISC",
+  "version": "0.1.1",
+
+  "scripts": {
+    "dev":   "echo Start app inside app folder e.g.: s01_first-server-api",
+    "start": "echo Start app inside app folder e.g.: s01_first-server-api",
+    "test":  "echo \"Error: no test specified\" && exit 1"
+    },
+
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+     },
+  "devDependencies": { },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/{account}/{Proj}_{Stg##}-{owner}.git"
+    },
+  "bugs": {
+    "url": "https://github.com/{account}/{Proj}_{Stg##}-{owner}/issues"
+    },
+  "homepage": "https://{account}.github.io/{Proj}_{Stg##}-{owner}#readme"
+}

@@ -1,19 +1,22 @@
-
-{ // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-     , { "type"     : "node"
-       , "name"     : "Debug Node Script"
-       , "request"  : "launch"
-       , "skipFiles": [ "<node_internals>/**" ]
-       , "program"  : "${file}
-          }
-     , { "type"     : "bashdb"
-       , "name"     : "Debug Bash Script"
-       , "request"  : "launch"
-       , "program"  : "${file}
-          }
-       ]
-   }
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Current Node.js script",
+//      "runtimeExecutable": "C:\\Users\\Robin\\AppData\\Local\\nvs\\node\\22.17.0\\x64\\node.exe",
+        "skipFiles": [ "<node_internals>/**" ],
+        "program": "${file}",
+        "envFile": "${fileDirname}/.env"
+         }
+    , { "type"     : "bashdb"
+      , "name"     : "Debug Bash Script"
+      , "request"  : "launch"
+      , "program"  : "${file}"
+         }        
+    ]
+}

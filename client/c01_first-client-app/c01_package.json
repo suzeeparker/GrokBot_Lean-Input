@@ -1,0 +1,29 @@
+{
+  "name": "c01-first-app",
+  "author": "Robin Mattern",
+  "description": "First Node.js Client0 App",
+  "keywords": [ ],
+  "license": "ISC",
+
+  "version": "0.1.1",
+  "main": "0-main.mjs",
+  "type" "module",
+
+  "scripts": {
+    "dev": "node 0-main.mjs",
+    "start": "node 0-main.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+     },
+
+  "dependencies": {  },
+  "devdependencies": {  },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/{account}/{Proj}_{Stg##}-{owner}.git"
+     },
+  "bugs": {
+    "url": "https://github.com/{account}/{Proj}_{Stg##}-{owner}/issues"
+     },
+  "homepage": "https://{account}.github.io/{Proj}_{Stg##}-{owner}#readme"
+}
