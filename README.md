@@ -35,3 +35,6 @@ a clear seperation of client versus server code.
 - .vscode - Editor settings
 - .git    - Git repository data
 
+## Lean Input
+The first Lean Input tool is `lean-input-trafilatura`. Its skills, shared helpers, tests, and operator docs are under `skills/`, `scripts/lean_input/`, `tests/lean_input/`, and `docs/lean-input/`. Commit subjects are described in `CONTRIBUTING.md`. The starter client and server trees are separate from that slice.
+
