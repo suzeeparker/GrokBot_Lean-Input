@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 
+import extract_url
 import install_runtime
 import scrape_options
 from install_runtime import InstallError
@@ -61,7 +62,19 @@ def parse_task(task):
     if match:
         output = (match.group(1) or match.group(2)).rstrip(".,);")
         search_in = task[: match.start()] + " " + task[match.end() :]
-    urls = [raw.rstrip(".,);]") for raw in URL_RE.findall(search_in)]
+    urls = []
+    seen = set()
+    for raw in URL_RE.findall(search_in):
+        token = raw.rstrip(".,);]")
+        if token not in seen:
+            urls.append(token)
+            seen.add(token)
+    for raw in search_in.split():
+        token = raw.rstrip(".,);]")
+        if token in seen or not extract_url.is_request_target(token):
+            continue
+        urls.append(token)
+        seen.add(token)
     return urls, output, retain
 
 

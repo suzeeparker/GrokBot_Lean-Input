@@ -12,6 +12,7 @@ import ipaddress
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import socket
 import ssl
@@ -109,6 +110,94 @@ def canonical_host(hostname):
         return host
     except ValueError:
         return host.encode("idna").decode("ascii")
+
+
+def _split_host_token(token):
+    """Return ``(host, port, suffix)`` when ``token`` is a host plus an optional path."""
+    if not token or "://" in token or "@" in token:
+        return None
+    hostport = token
+    suffix = ""
+    for index, char in enumerate(token):
+        if char in "/?#":
+            hostport = token[:index]
+            suffix = token[index:]
+            break
+    if not hostport or any(char.isspace() for char in suffix):
+        return None
+    port = None
+    if hostport.count(":") == 1:
+        host, port_text = hostport.split(":")
+        if not port_text.isdigit() or not 0 < int(port_text) <= 65535:
+            return None
+        port = port_text
+    elif ":" in hostport:
+        return None
+    else:
+        host = hostport
+    host = host.rstrip(".")
+    if not host:
+        return None
+    if host.casefold() != "localhost" and "." not in host:
+        return None
+    if len(host) > 253:
+        return None
+    for label in host.split("."):
+        if not label or len(label) > 63 or label.startswith("-") or label.endswith("-"):
+            return None
+        if not re.fullmatch(r"[A-Za-z0-9-]+", label):
+            return None
+    return host, port, suffix
+
+
+def qualify_url(token):
+    """Return ``(url, warnings)`` for one URL token.
+
+    A token that already has ``http://`` or ``https://`` is unchanged.
+    A hostname, with an optional path, gets ``https://`` and one warning.
+    ``http://`` is never added. ``localhost`` and a nonpublic IP literal are
+    refused with no scheme added. Any other token is returned unchanged.
+    """
+    if not isinstance(token, str):
+        raise ValueError("Only public HTTP/HTTPS URLs are accepted")
+    stripped = token.strip()
+    if "://" in stripped:
+        return stripped, []
+    parsed = _split_host_token(stripped.rstrip(".,);]"))
+    if parsed is None:
+        return stripped, []
+    host, port, suffix = parsed
+    cleaned = host + (f":{port}" if port else "") + suffix
+    if host.casefold() == "localhost":
+        raise ValueError("Localhost is forbidden")
+    try:
+        literal = ipaddress.ip_address(host)
+    except ValueError:
+        literal = None
+    if literal is not None and not address_is_public(literal):
+        raise ValueError("Nonpublic destination rejected")
+    if literal is None and "." not in host:
+        return stripped, []
+    url = "https://" + cleaned
+    warning = f"No scheme was given for {cleaned}. https:// was added, so the request is {url}."
+    return url, [warning]
+
+
+def is_request_target(token):
+    """True when a standalone token is an URL, a bare host, or a refused host."""
+    if not isinstance(token, str):
+        return False
+    stripped = token.strip().rstrip(".,);]")
+    if not stripped:
+        return False
+    lowered = stripped.lower()
+    if lowered.startswith("http://") or lowered.startswith("https://"):
+        return True
+    try:
+        _url, warnings = qualify_url(stripped)
+    except ValueError:
+        return True
+    return bool(warnings)
 
 
 def validate_url(url):

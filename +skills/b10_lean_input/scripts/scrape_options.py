@@ -66,7 +66,7 @@ def parse_options(task):
     Leading standalone words before the URL are options. ``all`` selects
     page, seo, aeo, and schema. Duplicates are ignored. An unknown word in
     that position is an error. With no option words, the default is page.
-    ``seoul.example`` is not an option word.
+    A hostname such as ``seoul.example`` is a URL token, not an option word.
     """
     text = task.strip() if isinstance(task, str) else ""
     if not text:
@@ -74,8 +74,7 @@ def parse_options(task):
     tokens = text.split()
     url_at = None
     for index, token in enumerate(tokens):
-        lowered = token.lower()
-        if lowered.startswith("http://") or lowered.startswith("https://"):
+        if extract_url.is_request_target(token):
             url_at = index
             break
     if url_at is None:
@@ -551,6 +550,8 @@ def _summary_head(payload, title):
     lines = [f"{title} for {payload['final_url']}", f"Output: {payload.get('output', NOT_FOUND)}"]
     if payload.get("error"):
         lines.append(f"Error: {payload['error']}")
+    for warning in payload.get("warnings") or []:
+        lines.append(f"Warning: {warning}")
     return lines
 
 
@@ -725,7 +726,8 @@ def _safe_origin(url, origin):
         return False
 
 
-def error_payload(option, url, message):
+def error_payload(option, url, message, warnings=None):
+    noted = list(warnings or [])
     if option == "page":
         return {
             "requested_url": url if isinstance(url, str) else None,
@@ -735,7 +737,7 @@ def error_payload(option, url, message):
             "publication_date": None,
             "text": None,
             "status": "error",
-            "warnings": [],
+            "warnings": noted,
             "error": message,
         }
     base = {
@@ -744,7 +746,7 @@ def error_payload(option, url, message):
         "option": option,
         "status": "error",
         "error": message,
-        "warnings": [],
+        "warnings": noted,
     }
     if option == "seo":
         base.update({
@@ -804,24 +806,36 @@ def summarize_selected(payloads):
     return "\n\n".join(parts)
 
 
+def _note_scheme(payloads, warnings):
+    if not warnings:
+        return
+    for payload in payloads.values():
+        payload["warnings"] = list(warnings) + list(payload.get("warnings") or [])
+
+
 def run_selected(options, url, stem, allow_tunnel=False, fetcher=None):
     paths = files_for(stem, options)
     code = 0
+    requested = url
+    scheme_warnings = []
     try:
-        validate_url(url)
+        requested, scheme_warnings = extract_url.qualify_url(url)
+        validate_url(requested)
     except ValueError as exc:
-        payloads = {name: error_payload(name, url, str(exc)) for name in options}
+        shown = requested if scheme_warnings else url
+        payloads = {name: error_payload(name, shown, str(exc), scheme_warnings) for name in options}
         code = 2
         html = None
     else:
         try:
-            payloads, html = gather(url, options, allow_tunnel=allow_tunnel, fetcher=fetcher)
+            payloads, html = gather(requested, options, allow_tunnel=allow_tunnel, fetcher=fetcher)
+            _note_scheme(payloads, scheme_warnings)
         except TimeoutError as exc:
-            payloads = {name: error_payload(name, url, str(exc)) for name in options}
+            payloads = {name: error_payload(name, requested, str(exc), scheme_warnings) for name in options}
             code = 1
             html = None
         except ValueError as exc:
-            payloads = {name: error_payload(name, url, str(exc)) for name in options}
+            payloads = {name: error_payload(name, requested, str(exc), scheme_warnings) for name in options}
             code = 1
             html = None
     for name in options:

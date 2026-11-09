@@ -54,6 +54,12 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(urls, ["https://example.com/a", "https://example.org/b"])
         self.assertEqual(output, "/tmp/my file.json")
         self.assertTrue(retain)
+        urls, output, retain = actions.parse_task("www.sicomm.net")
+        self.assertEqual(urls, ["www.sicomm.net"])
+        self.assertIsNone(output)
+        self.assertFalse(retain)
+        urls, _output, _retain = actions.parse_task("http://example.com/a")
+        self.assertEqual(urls, ["http://example.com/a"])
 
 
 class DispatchTests(unittest.TestCase):

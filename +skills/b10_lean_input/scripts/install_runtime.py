@@ -629,6 +629,8 @@ def explain(home, target):
         "scrape and do with only a URL are the page option.",
         "scrape seo, scrape aeo, and scrape schema can be combined. scrape all runs all four.",
         "An unknown option word before the URL is refused and nothing is fetched.",
+        "A hostname with no scheme, such as sicomm.net or www.sicomm.net/path, is requested as https:// plus that token.",
+        "The summary says https:// was added. http:// is never added. localhost and a nonpublic IP are refused.",
         "A missing seo, aeo, or schema element is the string not found. The command prints one summary.",
         f"Interpreter: {interpreter}",
         f"Helpers: {dest['runtime']}",

@@ -17,12 +17,6 @@ import scrape_options as scrape  # noqa: E402
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
-def classify(text):
-    _action, task = actions.parse_dispatch(text)
-    option, rest = scrape.parse_scrape_option(task)
-    return option, rest
-
-
 def selected(text):
     _action, task = actions.parse_dispatch(text)
     return scrape.parse_options(task)
@@ -199,6 +193,90 @@ class ReportTests(unittest.TestCase):
         self.assertIn("Page summary", summary)
         self.assertIn("SEO summary", summary)
         self.assertIn(written["seo"]["output"], summary)
+
+
+class SchemeTests(unittest.TestCase):
+    def test_bare_www_and_path_gain_https_and_a_warning(self):
+        cases = {
+            "sicomm.net": "https://sicomm.net",
+            "www.sicomm.net": "https://www.sicomm.net",
+            "sicomm.net/path": "https://sicomm.net/path",
+        }
+        for token, expected in cases.items():
+            url, warnings = scrape.extract_url.qualify_url(token)
+            self.assertEqual(url, expected)
+            self.assertEqual(len(warnings), 1)
+            self.assertIn("https:// was added", warnings[0])
+            self.assertNotIn("http:// was added", warnings[0])
+
+        html = (FIXTURES / "seo_page.html").read_text(encoding="utf-8")
+        calls = []
+
+        def fake(url, allow_tunnel=False, require_html=False, lock_origin=None):
+            calls.append(url)
+            return {"ok": True, "final_url": url, "http_status": 200, "text": html, "warnings": [], "error": None}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            code, summary, written = scrape.run_selected(
+                ["page"], "www.sicomm.net", Path(tmp) / "page.json", fetcher=fake,
+            )
+            stored = __import__("json").loads(Path(written["page"]["output"]).read_text(encoding="utf-8"))
+        self.assertEqual(calls, ["https://www.sicomm.net"])
+        self.assertEqual(stored["requested_url"], "https://www.sicomm.net")
+        self.assertIn("https:// was added", stored["warnings"][0])
+        self.assertIn("Warning: No scheme was given for www.sicomm.net", summary)
+        self.assertIn(code, (0, 1))
+
+    def test_explicit_http_is_unchanged(self):
+        url, warnings = scrape.extract_url.qualify_url("http://example.com/a")
+        self.assertEqual(url, "http://example.com/a")
+        self.assertEqual(warnings, [])
+        calls = []
+
+        def fake(url, allow_tunnel=False, require_html=False, lock_origin=None):
+            calls.append(url)
+            return {"ok": True, "final_url": url, "http_status": 200, "text": "<html></html>", "warnings": [], "error": None}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            _code, summary, written = scrape.run_selected(
+                ["page"], "http://example.com/a", Path(tmp) / "page.json", fetcher=fake,
+            )
+            stored = __import__("json").loads(Path(written["page"]["output"]).read_text(encoding="utf-8"))
+        self.assertEqual(calls, ["http://example.com/a"])
+        self.assertEqual(stored["requested_url"], "http://example.com/a")
+        self.assertNotIn("https:// was added", summary)
+
+    def test_localhost_and_bad_ip_are_refused_without_a_scheme(self):
+        for token, message in (("localhost", "Localhost is forbidden"), ("127.0.0.1", "Nonpublic destination rejected")):
+            with self.assertRaises(ValueError) as caught:
+                scrape.extract_url.qualify_url(token)
+            self.assertIn(message, str(caught.exception))
+
+        def boom(*_args, **_kwargs):
+            raise AssertionError("network")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            code, summary, written = scrape.run_selected(
+                ["page"], "localhost", Path(tmp) / "page.json", fetcher=boom,
+            )
+            stored = __import__("json").loads(Path(written["page"]["output"]).read_text(encoding="utf-8"))
+        self.assertEqual(code, 2)
+        self.assertIn("Localhost is forbidden", summary)
+        self.assertEqual(stored["requested_url"], "localhost")
+        self.assertFalse(str(stored["requested_url"]).startswith("http"))
+
+    def test_unknown_word_and_option_words_are_not_prefixed(self):
+        for token in ("foo", "seo", "page", "aeo", "schema", "all"):
+            url, warnings = scrape.extract_url.qualify_url(token)
+            self.assertEqual(url, token)
+            self.assertEqual(warnings, [])
+        parsed = selected("scrape foo https://example.com/a")
+        self.assertIn("Unknown option 'foo'", parsed.error)
+        parsed = selected("scrape seo www.sicomm.net/path")
+        self.assertEqual(parsed.options, ["seo"])
+        self.assertEqual(parsed.task, "www.sicomm.net/path")
+        urls, _output, _retain = actions.parse_task("sicomm.net/path")
+        self.assertEqual(urls, ["sicomm.net/path"])
 
 
 if __name__ == "__main__":
