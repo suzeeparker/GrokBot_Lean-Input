@@ -54,7 +54,10 @@ def compare(left: Path, right: Path) -> dict:
         right_files = right_meta["files"]
         shared = sorted(set(left_files) & set(right_files))
         differing = [name for name in shared if left_files[name] != right_files[name]]
-        runtime = [name for name in differing if name.startswith("runtime/")]
+        runtime = [
+            name for name in differing
+            if name.startswith("scripts/") and name != "scripts/run.py"
+        ]
         return {
             "left_revision": left_meta["source_revision"],
             "right_revision": right_meta["source_revision"],

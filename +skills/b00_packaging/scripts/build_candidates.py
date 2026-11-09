@@ -51,29 +51,34 @@ def build_tree(repo: Path, target: str, revision: str, out_dir: Path) -> Path:
     root = out_dir / f"scraper-viewer-{target}-candidate-{short}"
     if root.exists():
         raise SystemExit(f"Refusing to replace {root}")
-    skill_group = "bot" if target == "bot" else "cursor"
-    skill = repo / "+skills" / "b11_scraper-viewer" / skill_group / "SKILL.md"
-    _copy(skill, root / "SKILL.md")
-    shared = repo / "+skills" / "b10_lean_input" / "scripts"
-    for name in RUNTIME_FILES:
-        _copy(shared / name, root / "runtime" / name)
-    docs = repo / "+docs" / "B11_Scraper-Viewer"
-    for name in DOCS:
-        _copy(docs / name, root / "docs" / name)
-    _copy(repo / "+docs" / "b12_Lean-Input-JQ" / "Pattern-jq.md", root / "docs" / "Pattern-jq.md")
+    platform = repo / "+skills" / "b11_scraper-viewer" / target
+    _copy(platform / "SKILL.md", root / "SKILL.md")
+    for path in sorted((platform / "scripts").glob("*")):
+        if path.is_file():
+            _copy(path, root / "scripts" / path.name)
+    for path in sorted((platform / "docs").glob("*.md")):
+        _copy(path, root / "docs" / path.name)
+    tests = platform / "tests"
+    if tests.is_dir():
+        for path in sorted(item for item in tests.rglob("*") if item.is_file()):
+            if "__pycache__" in path.parts or path.suffix == ".pyc":
+                continue
+            _copy(path, root / "tests" / path.relative_to(tests))
     readme = (
         f"# scraper-viewer {target} candidate\n\n"
         "This archive is an unmerged candidate snapshot. It is not a stable release and it has no git tag.\n"
-        "It is not a git checkout. Do not clone the repository onto the bot computer or the Mac.\n"
+        "It is not a published GitHub release. It is not a git checkout. Do not clone the repository onto the bot computer or the Mac.\n"
         f"Source revision: `{revision}`\n\n"
         "GitHub `master` is authoritative after merge. Until the parent confirms Grok Bot app acceptance "
-        "and Mac Cursor acceptance, do not merge.\n\n"
+        "and macOS acceptance, do not merge.\n\n"
+        "The unpacked directory is the skill folder: `SKILL.md`, `scripts/`, `docs/`, and `tests/`. "
+        "It does not contain a virtual environment. Trafilatura stays in the managed venv outside this folder.\n\n"
         "Install from this unpacked directory with the absolute base interpreter. Run the plan first, "
         "then repeat with `--approve` only after the owner agrees.\n\n"
         "```sh\n"
         'BASE_PYTHON="/absolute/path/to/python3"\n'
         'UNPACKED="/absolute/path/to/this/directory"\n'
-        '"$BASE_PYTHON" "$UNPACKED/runtime/install_runtime.py" install \\\n'
+        '"$BASE_PYTHON" "$UNPACKED/scripts/install_runtime.py" install \\\n'
         f'  --target {target} \\\n'
         '  --home "$HOME" \\\n'
         '  --source-root "$UNPACKED" \\\n'
@@ -119,9 +124,9 @@ def zip_tree(root: Path) -> Path:
 
 def runtime_hashes(root: Path) -> dict:
     hashes = {}
-    for path in sorted((root / "runtime").iterdir()):
-        if path.is_file():
-            hashes[path.name] = sha256_file(path)
+    for name in RUNTIME_FILES:
+        path = root / "scripts" / name
+        hashes[name] = sha256_file(path)
     return hashes
 
 
@@ -138,7 +143,7 @@ def build(repo: Path, revision: str, out_dir: Path):
     checksums = out_dir / f"scraper-viewer-candidate-{revision[:12]}.checksums.txt"
     lines = [f"source_revision {revision}", f"trafilatura_pin {TRAFILATURA_PIN}", "runtime_helpers_identical true"]
     for name in sorted(bot_hashes):
-        lines.append(f"runtime/{name} {bot_hashes[name]}")
+        lines.append(f"scripts/{name} {bot_hashes[name]}")
     for target, archive in archives.items():
         lines.append(f"{archive.name} {sha256_file(archive)}")
     checksums.write_text("\n".join(lines) + "\n", encoding="utf-8")

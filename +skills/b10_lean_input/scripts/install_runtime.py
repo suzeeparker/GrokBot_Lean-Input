@@ -58,16 +58,22 @@ def destinations(home, target):
     home = Path(home).expanduser().resolve()
     if target == "bot":
         base = home / "Tools" / "lean-input-bot"
-        skill = base / "skill-source" / COMPONENT / "SKILL.md"
+        skill_root = base / COMPONENT
     elif target == "mac":
         base = home / "Tools" / "lean-input"
-        skill = home / ".cursor" / "skills" / COMPONENT / "SKILL.md"
+        skill_root = home / ".cursor" / "skills" / COMPONENT
+    elif target == "win":
+        raise InstallError("The win platform is planned and is not supported")
     else:
         raise InstallError(f"Unknown target {target}")
+    scripts = skill_root / "scripts"
     return {
         "home": home,
-        "runtime": base / "runtime" / COMPONENT,
-        "skill": skill,
+        "skill_root": skill_root,
+        "scripts": scripts,
+        # Same directory as scripts. Older callers used this key for the helper directory.
+        "runtime": scripts,
+        "skill": skill_root / "SKILL.md",
         "venv": base / ".venv",
         "manifest": base / "manifests" / f"{COMPONENT}.json",
         "output": output_directory(target, home),
@@ -86,29 +92,66 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _platform_dir(root, target):
+    return root / "+skills" / "b11_scraper-viewer" / target
+
+
 def resolve_source(root, target):
+    """Locate a self-contained platform folder or an unpacked candidate.
+
+    A repository checkout selects ``+skills/b11_scraper-viewer/<target>``.
+    That folder holds ``SKILL.md``, ``scripts/``, and ``docs/``. Install does
+    not read ``+skills/b10_lean_input`` at runtime. An older candidate that
+    still has ``runtime/extract_url.py`` is accepted as a legacy package.
+    """
     root = Path(root).expanduser().resolve()
-    repo_script = root / "+skills" / "b10_lean_input" / "scripts" / "extract_url.py"
-    package_script = root / "runtime" / "extract_url.py"
-    if repo_script.is_file():
-        skill_name = "bot" if target == "bot" else "cursor"
-        skill = root / "+skills" / "b11_scraper-viewer" / skill_name / "SKILL.md"
-        onboarding = root / "+docs" / "B11_Scraper-Viewer" / "Onboarding.md"
-        runtime = root / "+skills" / "b10_lean_input" / "scripts"
+    if target not in {"bot", "mac"}:
+        raise InstallError("The win platform is planned and is not supported" if target == "win" else f"Unknown target {target}")
+    platform = _platform_dir(root, target)
+    candidate = None
+    if (platform / "scripts" / "extract_url.py").is_file() and (platform / "SKILL.md").is_file():
+        base = platform
         layout = "repo"
-        candidate = None
-    elif package_script.is_file():
-        skill = root / "SKILL.md"
-        onboarding = root / "docs" / "Onboarding.md"
-        runtime = root / "runtime"
+    elif (root / "scripts" / "extract_url.py").is_file() and (root / "SKILL.md").is_file():
+        base = root
         layout = "package"
+        candidate = root / "CANDIDATE.json"
+    elif (root / "runtime" / "extract_url.py").is_file():
+        base = root
+        layout = "legacy-package"
         candidate = root / "CANDIDATE.json"
     else:
         raise InstallError(f"No scraper-viewer payload at {root}")
-    files = {name: runtime / name for name in RUNTIME_FILES}
-    files["ONBOARDING.md"] = onboarding
-    files["SKILL.md"] = skill
-    missing = [str(path) for path in files.values() if not path.is_file()]
+    script_dir = base / "scripts" if layout != "legacy-package" else base / "runtime"
+    files = {name: script_dir / name for name in RUNTIME_FILES}
+    run_py = script_dir / "run.py"
+    if run_py.is_file():
+        files["run.py"] = run_py
+    files["SKILL.md"] = base / "SKILL.md"
+    docs_dir = base / "docs"
+    docs = {}
+    if docs_dir.is_dir():
+        for path in sorted(docs_dir.glob("*.md")):
+            docs[path.name] = path
+    if "Onboarding.md" not in docs:
+        legacy = base / "docs" / "Onboarding.md"
+        if layout == "legacy-package" and (base / "docs" / "Onboarding.md").is_file():
+            docs["Onboarding.md"] = base / "docs" / "Onboarding.md"
+        elif not legacy.is_file() and layout == "legacy-package":
+            pass
+    if "Onboarding.md" not in docs and layout == "legacy-package" and (base / "docs" / "Onboarding.md").is_file():
+        docs["Onboarding.md"] = base / "docs" / "Onboarding.md"
+    files.update({f"docs/{name}": path for name, path in docs.items()})
+    tests_dir = base / "tests"
+    if tests_dir.is_dir():
+        for path in sorted(item for item in tests_dir.rglob("*") if item.is_file()):
+            if "__pycache__" in path.parts or path.suffix == ".pyc":
+                continue
+            files["tests/" + path.relative_to(tests_dir).as_posix()] = path
+    required = [files[name] for name in RUNTIME_FILES] + [files["SKILL.md"]]
+    if "docs/Onboarding.md" in files:
+        required.append(files["docs/Onboarding.md"])
+    missing = [str(path) for path in required if not path.is_file()]
     if missing:
         raise InstallError("Payload is incomplete: " + ", ".join(missing))
     packaged_revision = None
@@ -121,6 +164,7 @@ def resolve_source(root, target):
         "root": root,
         "layout": layout,
         "files": files,
+        "docs": sorted(docs),
         "packaged_revision": packaged_revision,
     }
 
@@ -134,6 +178,42 @@ def resolve_revision(source, requested):
     if not requested:
         raise InstallError("A source revision is required")
     return requested
+
+
+def legacy_manifest_path(dest):
+    return dest["manifest"].parent / "lean-input-trafilatura.json"
+
+
+def legacy_report(dest):
+    """Describe the previous component. This install does not delete it.
+
+    A modified helper, the virtual environment, output files, and a skill-library
+    entry are left untouched. Removing the old component needs a separate
+    confirmation that is not part of this command.
+    """
+    path = legacy_manifest_path(dest)
+    if not path.is_file():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return [{"path": str(path), "action": "legacy-unreadable"}]
+    if data.get("component") != "lean-input-trafilatura":
+        return [{"path": str(path), "action": "legacy-unrecognized"}]
+    items = [{"path": str(path.resolve()), "action": "legacy-manifest-preserved"}]
+    for entry in data.get("files", []):
+        file_path = Path(entry.get("path", ""))
+        recorded = entry.get("sha256")
+        if file_path.is_symlink():
+            action = "legacy-symlink-preserved"
+        elif not file_path.exists():
+            action = "legacy-absent"
+        elif not recorded or sha256_file(file_path) != recorded:
+            action = "legacy-modified-preserved"
+        else:
+            action = "legacy-owned-preserved"
+        items.append({"path": str(file_path), "action": action})
+    return items
 
 
 def load_manifest(path: Path):
@@ -156,11 +236,42 @@ def manifest_index(manifest):
 
 def desired_pairs(source, dest):
     pairs = []
-    for name in RUNTIME_FILES:
-        pairs.append((source["files"][name], dest["runtime"] / name))
-    pairs.append((source["files"]["ONBOARDING.md"], dest["runtime"] / "ONBOARDING.md"))
+    for name in list(RUNTIME_FILES) + ["run.py"]:
+        if name in source["files"]:
+            pairs.append((source["files"][name], dest["scripts"] / name))
     pairs.append((source["files"]["SKILL.md"], dest["skill"]))
+    for name in source.get("docs", []):
+        pairs.append((source["files"][f"docs/{name}"], dest["skill_root"] / "docs" / name))
+    for key, src in source["files"].items():
+        if key.startswith("tests/"):
+            pairs.append((src, dest["skill_root"] / key))
     return pairs
+
+
+def retirement_actions(existing, new_paths):
+    """Plan removal of managed files that this layout no longer installs.
+
+    A file is removed only when its checksum still matches the manifest.
+    A changed file is left in place and is not overwritten.
+    """
+    if not existing:
+        return []
+    kept = set(new_paths)
+    actions = []
+    for entry in existing.get("files", []):
+        path_text = entry["path"]
+        if path_text in kept:
+            continue
+        path = Path(path_text)
+        if path.is_symlink():
+            actions.append({"path": path_text, "action": "keep-unmanaged", "reason": "symlink"})
+        elif not path.exists():
+            actions.append({"path": path_text, "action": "already-absent"})
+        elif sha256_file(path) != entry.get("sha256"):
+            actions.append({"path": path_text, "action": "keep-unmanaged", "reason": "checksum changed"})
+        else:
+            actions.append({"path": path_text, "action": "retire"})
+    return actions
 
 
 def classify_file(dest: Path, source: Path, owned: dict, update: bool):
@@ -223,6 +334,24 @@ def probe_python(executable):
         return False, version, f"Python {version} is below 3.10"
     detail = lines[1] if len(lines) > 1 else ""
     return True, version, detail
+
+
+def select_base_python(candidates):
+    """Return the first candidate that passes ``probe_python``.
+
+    Python below 3.10 is refused. ``/usr/bin/python3`` is not assumed,
+    because on macOS that path is often Apple's 3.9 Command Line Tools.
+    """
+    for candidate in candidates:
+        if not isinstance(candidate, (str, Path)):
+            continue
+        text = str(candidate).strip()
+        if not text:
+            continue
+        ok, _version, _detail = probe_python(text)
+        if ok:
+            return text
+    return None
 
 
 def probe_trafilatura(venv_python):
@@ -376,8 +505,9 @@ def _registration(target):
     return {
         "state": "cursor-skill-file",
         "note": (
-            "SKILL.md was placed at ~/.cursor/skills/scraper-viewer/ for Cursor discovery. "
-            "Confirm it is listed in Customize, Skills, before treating it as active. "
+            "The skill folder is ~/.cursor/skills/scraper-viewer/ and includes scripts and docs. "
+            "Cursor discovers that folder. Other macOS agents can use the same folder. "
+            "Confirm it is listed in Customize, Skills, before treating Cursor discovery as active. "
             "Do not turn on Sync Skills for Cloud Agents as part of this install."
         ),
     }
@@ -386,8 +516,11 @@ def _registration(target):
 def _build_manifest(target, revision, layout, base_python, venv_python, venv_ownership, dependency, file_records, dest):
     managed_directories = sorted(
         {
-            str(dest["runtime"]),
-            str(dest["skill"].parent),
+            str(dest["skill_root"]),
+            str(dest["scripts"]),
+            str(dest["skill_root"] / "docs"),
+            str(dest["skill_root"] / "tests"),
+            str(dest["skill_root"] / "tests" / "fixtures"),
             str(dest["manifest"].parent),
         }
     )
@@ -443,6 +576,8 @@ def install(home, target, source_root, source_revision, python, approve=False, u
     blocked = [item for item in classified if item["action"] == "block"]
     if blocked:
         raise InstallError(blocked[0]["reason"])
+    retiring = retirement_actions(existing, [item["path"] for item in classified])
+    legacy = legacy_report(dest)
     venv_info = inspect_venv(dest["venv"], python)
     dep = dependency_plan(venv_info["python"], venv_info["action"] == "reuse")
     if dep["action"] == "reuse" and existing and existing.get("dependency", {}).get("ownership") == "installed-by-lean-input":
@@ -469,7 +604,8 @@ def install(home, target, source_root, source_revision, python, approve=False, u
         "source_revision": revision,
         "source_layout": source["layout"],
         "approval": "granted" if approve else "required",
-        "files": [{"path": item["path"], "action": item["action"]} for item in classified],
+        "files": [{"path": item["path"], "action": item["action"]} for item in classified] + retiring + legacy,
+        "legacy": legacy,
         "venv": {"path": str(dest["venv"]), "action": venv_info["action"], "ownership": venv_ownership},
         "dependency": dep,
         "registration": prospective["registration"],
@@ -506,6 +642,14 @@ def install(home, target, source_root, source_revision, python, approve=False, u
                 "ownership": "installed-by-lean-input",
                 "warning": None,
             }
+        for item in retiring:
+            if item["action"] == "retire":
+                Path(item["path"]).unlink()
+        if existing:
+            for directory in sorted(existing.get("managed_directories", []), key=len, reverse=True):
+                candidate = Path(directory)
+                if candidate.is_dir() and not any(candidate.iterdir()):
+                    candidate.rmdir()
         file_records = [{"path": item["path"], "sha256": item["sha256"]} for item in classified]
         file_records.sort(key=lambda item: item["path"])
         manifest = _build_manifest(
@@ -528,7 +672,8 @@ def install(home, target, source_root, source_revision, python, approve=False, u
     except BaseException:
         journal.rollback()
         raise
-    result_name = "updated" if any(item["action"] == "replace" for item in classified) else "installed"
+    moved = any(item["action"] in {"replace", "retire"} for item in classified + retiring)
+    result_name = "updated" if moved else "installed"
     return {
         "result": result_name,
         "target": target,
@@ -604,7 +749,7 @@ def explain(home, target):
     manifest_path = dest["manifest"]
     if manifest_path.is_file():
         manifest = load_manifest(manifest_path)
-    location = "Grok Bot computer" if target == "bot" else "Cursor on this Mac"
+    location = "Grok Bot computer" if target == "bot" else "macOS"
     interpreter = str(dest["venv"] / "bin" / "python")
     version = None
     warning = None
@@ -635,7 +780,7 @@ def explain(home, target):
         "The extractor library is Trafilatura. The skill name is scraper-viewer.",
         "A missing seo, aeo, or schema element is the string not found. The command prints one summary.",
         f"Interpreter: {interpreter}",
-        f"Helpers: {dest['runtime']}",
+        f"Helpers: {dest['scripts']}",
         f"Skill file: {dest['skill']}",
         f"Default output directory: {dest['output']}",
         *(

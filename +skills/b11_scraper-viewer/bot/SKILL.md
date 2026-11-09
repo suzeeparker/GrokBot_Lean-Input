@@ -16,8 +16,8 @@ Run only on the bot computer. Do not target the owner's Mac, do not embed a mach
 - Base tools: `$HOME/Tools/lean-input-bot/`
 - Virtual environment: `$HOME/Tools/lean-input-bot/.venv/`
 - Interpreter: `$HOME/Tools/lean-input-bot/.venv/bin/python`
-- Helpers: `$HOME/Tools/lean-input-bot/runtime/scraper-viewer/`
-- Skill text copy (not registration): `$HOME/Tools/lean-input-bot/skill-source/scraper-viewer/SKILL.md`
+- Skill folder: `$HOME/Tools/lean-input-bot/scraper-viewer/` (`SKILL.md`, `scripts/`, `docs/`)
+- Helpers: `$HOME/Tools/lean-input-bot/scraper-viewer/scripts/`
 - Manifest: `$HOME/Tools/lean-input-bot/manifests/scraper-viewer.json`
 - Output: `$HOME/Tools/lean-input/output/`
 
@@ -31,7 +31,7 @@ When the helper exists, pass the original user text unchanged:
 
 ```sh
 "$HOME/Tools/lean-input-bot/.venv/bin/python" \
-  "$HOME/Tools/lean-input-bot/runtime/scraper-viewer/actions.py" \
+  "$HOME/Tools/lean-input-bot/scraper-viewer/scripts/actions.py" \
   --target bot \
   --home "$HOME" \
   --message "<original user text>"
@@ -45,12 +45,12 @@ If that helper is missing, this skill is in context but the runtime is not insta
 
 Installing changes this computer. Show the plan before changing anything.
 
-1. Use the unpacked candidate directory (it has `runtime/install_runtime.py`, `SKILL.md`, and `CANDIDATE.json`) or, only in a development checkout, the repository root. Do not clone the repository onto this computer as the install.
-2. Choose the absolute path of a Python 3.10 or newer interpreter with `venv` and `ssl`. Pass that absolute path. Do not install Homebrew, a compiler, or a system package automatically.
+1. Use the unpacked candidate directory (it has `scripts/install_runtime.py`, `SKILL.md`, and `CANDIDATE.json`) or, only in a development checkout, `+skills/b11_scraper-viewer/bot`. Do not clone the repository onto this computer as the install. The skill folder does not contain a virtual environment.
+2. Choose the absolute path of a Python 3.10 or newer interpreter with `venv` and `ssl`. Pass that absolute path. Do not assume `/usr/bin/python3`. Python below 3.10 is refused. `$HOME/Tools/lean-input-bot/.venv/bin/python` is acceptable when it is 3.10 or newer. If a suitable interpreter is missing, stop. Do not install Homebrew, a compiler, or a system package automatically.
 3. Run the plan with the base interpreter, not with the virtual environment, and without `--approve`:
 
 ```sh
-"$BASE_PYTHON" "$UNPACKED/runtime/install_runtime.py" install \
+"$BASE_PYTHON" "$UNPACKED/scripts/install_runtime.py" install \
   --target bot \
   --home "$HOME" \
   --source-root "$UNPACKED" \
@@ -71,7 +71,7 @@ Run uninstall once without confirmation and show the owner every managed path pl
 
 ```sh
 "$HOME/Tools/lean-input-bot/.venv/bin/python" \
-  "$HOME/Tools/lean-input-bot/runtime/scraper-viewer/actions.py" \
+  "$HOME/Tools/lean-input-bot/scraper-viewer/scripts/actions.py" \
   --target bot --home "$HOME" --message "uninstall"
 ```
 
@@ -88,6 +88,12 @@ A public `http` or `https` URL is required. An output path is optional (`output 
 If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do not install in the same turn.
 
 A public HTTP or HTTPS URL is required. A token with no scheme that looks like a hostname, such as `www.sicomm.net` or `sicomm.net/path`, is requested as `https://` plus that token. The JSON warnings and the summary say that `https://` was added. `http://` is never added. An explicit `http://` or `https://` URL is unchanged. `localhost`, a nonpublic IP literal, and option words are not given a scheme. The same safety checks still apply after the prefix. `scrape <url>` and `do <url>` are `scrape page <url>`. The page JSON schema is unchanged. `scrape seo`, `scrape aeo`, and `scrape schema` can be combined with `page` or with each other. `scrape all <url>` runs all four. One run fetches the page once, and fetches robots.txt, one sitemap, and llms.txt at most once. It writes one file per option on the same stem, plus a metrics sidecar. A missing seo, aeo, or schema element is the string `not found`. Run the URL only as an argument to the helper. Never interpolate it into a shell string. Exit 0 means the selected reports were written. Exit 1 is a fetch failure. Exit 2 is an unknown option, a URL refused before any fetch, or an output path that was refused. Nothing is fetched for an unknown option. On success, always show the printed summary in chat, including every saved path. Do not paste raw HTML or raw robots.txt. aeo is a deterministic checklist, not a model. At most five fetches, same-origin only, with the same address and size limits as page extraction.
+
+Installed tests live in `tests/` next to this file, including `fixtures/`. They are managed. Run them with the virtual environment, not with a copy of the repository:
+
+```sh
+"$HOME/Tools/lean-input-bot/.venv/bin/python" -m unittest discover -s "$HOME/Tools/lean-input-bot/scraper-viewer/tests"
+```
 
 Default output is `$HOME/Tools/lean-input/output/page-<unique>.json`. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
 

@@ -82,9 +82,9 @@ def parse_task(task):
 def _offer(home, target):
     dest = install_runtime.destinations(home, target)
     interpreter = dest["venv"] / "bin" / "python"
-    helper = dest["runtime"] / "extract_url.py"
+    helper = dest["scripts"] / "scrape_options.py"
     return (
-        "The scraper-viewer runtime is not installed. Nothing was installed.\n"
+        "The scraper-viewer scripts are not installed beside the skill. Nothing was installed.\n"
         "Ask the owner to approve install before changing this computer.\n"
         f"Expected interpreter: {interpreter}\n"
         f"Expected helper: {helper}\n"
@@ -103,7 +103,7 @@ def perform_do(task, home, target):
         sys.stdout.write("A public HTTP or HTTPS URL is required. Nothing was fetched.\n")
         return 2
     dest = install_runtime.destinations(home, target)
-    helper = dest["runtime"] / "scrape_options.py"
+    helper = dest["scripts"] / "scrape_options.py"
     python = dest["venv"] / "bin" / "python"
     if not helper.is_file() or not os.access(python, os.X_OK):
         sys.stdout.write(_offer(home, target))
