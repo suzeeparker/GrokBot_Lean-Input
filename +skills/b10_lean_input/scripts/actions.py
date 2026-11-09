@@ -87,7 +87,7 @@ def perform_do(task, home, target):
         return 2
     if len(urls) > 1:
         sys.stdout.write("More than one URL was present. Only the first URL is extracted.\n")
-    command = [str(python), str(helper), urls[0]]
+    command = [str(python), str(helper), urls[0], "--target", target]
     if output:
         command.extend(["--output", output])
     if retain:

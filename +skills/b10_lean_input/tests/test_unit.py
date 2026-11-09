@@ -63,6 +63,54 @@ class UnitTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     m.public_addresses("example.org", 80)
 
+    def test_bot_egress_tunnel_is_narrow(self):
+        tunnel = [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("198.18.0.1", 443))]
+        mixed = tunnel + [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.1.2.3", 443))]
+        with patch.dict(os.environ, {m.TUNNEL_ENV: "127.0.0.1:8791"}):
+            with patch.object(m.socket, "getaddrinfo", return_value=tunnel):
+                accepted = m.public_addresses("example.com", 443, allow_tunnel=True)
+                self.assertTrue(m.resolved_uses_tunnel(accepted))
+            with patch.object(m.socket, "getaddrinfo", return_value=tunnel):
+                with self.assertRaises(ValueError):
+                    m.public_addresses("example.com", 443, allow_tunnel=False)
+            with patch.object(m.socket, "getaddrinfo", return_value=mixed):
+                with self.assertRaises(ValueError):
+                    m.public_addresses("example.com", 443, allow_tunnel=True)
+        cleaned = os.environ.copy()
+        cleaned.pop(m.TUNNEL_ENV, None)
+        with patch.dict(os.environ, cleaned, clear=True):
+            with patch.object(m.socket, "getaddrinfo", return_value=tunnel):
+                with self.assertRaises(ValueError):
+                    m.public_addresses("example.com", 443, allow_tunnel=True)
+        with patch.object(m.socket, "getaddrinfo", side_effect=AssertionError("DNS should not be called")):
+            with self.assertRaises(ValueError):
+                m.validate_url("https://198.18.0.1/")
+
+    def test_tunnel_warning_uses_original_host(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        server.queue = [(200, "text/html; charset=utf-8", "<html><body>ok</body></html>")]
+        port = server.server_address[1]
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(server.shutdown)
+        self.addCleanup(server.server_close)
+
+        def fake_dns(_host, _port, type=0):
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("198.18.0.1", port))]
+
+        real_connect = socket.socket.connect
+
+        def connect(sock, address):
+            return real_connect(sock, ("127.0.0.1", port))
+
+        with patch.dict(os.environ, {m.TUNNEL_ENV: "127.0.0.1:8791"}):
+            with patch.object(m.socket, "getaddrinfo", fake_dns):
+                with patch.object(socket.socket, "connect", connect):
+                    html, final, warnings = m.fetch_html("http://example.com/page", allow_tunnel=True)
+        self.assertIn("ok", html)
+        self.assertEqual(final, "http://example.com/page")
+        self.assertTrue(any("egress tunnel" in item for item in warnings))
+
     def test_redirect_rules(self):
         with self.assertRaises(ValueError):
             m.next_hop("https://example.org/a", "http://example.org/b", "https")
@@ -151,7 +199,7 @@ class UnitTests(unittest.TestCase):
         self.addCleanup(server.shutdown)
         self.addCleanup(server.server_close)
 
-        def fake_public(_host, _port):
+        def fake_public(_host, _port, allow_tunnel=False):
             return socket.getaddrinfo("127.0.0.1", port, type=socket.SOCK_STREAM)
 
         with patch.object(m, "public_addresses", fake_public):

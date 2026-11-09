@@ -76,6 +76,10 @@ Exit 0. Decoded HTML was not printed.
 
 The text is shorter than the HTML because boilerplate and markup were dropped. That is a measurement, not a savings claim. Title text from the page is not repeated in this particular extraction.
 
+## Egress-tunnel retest
+
+Python 3.12.3 on this checkout, after allowing 198.18.0.0/15 only for `--target bot` when `SAND_EGRESS_TUNNEL_PROXY_ADDR` is set. 34 tests, OK: 1 packaging, 24 shared, 9 Trafilatura. The same `https://example.com/` smoke, without that variable, stayed a direct public connection: decoded HTML 577, extracted text 156, serialized JSON 632. No tunnel warning was added.
+
 ## Not done
 
 - No skill was registered in the Grok Bot app

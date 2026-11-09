@@ -24,6 +24,8 @@ Optional extras (`trafilatura[all]`, language detection, pycurl) are out of scop
 
 The output directory is created on the first extraction, not by the installer, and is not removed on uninstall.
 
+The Grok Bot computer may resolve every public name to 198.18.0.0/15 and forward it through `SAND_EGRESS_TUNNEL_PROXY_ADDR`. Extraction allows that resolved range only for `--target bot` while the variable is set. The Mac target does not. A URL that already contains a 198.18 address is refused on both.
+
 ## Development checkout tests
 
 These commands run in a coding-agent checkout. They are not the Mac or bot install.

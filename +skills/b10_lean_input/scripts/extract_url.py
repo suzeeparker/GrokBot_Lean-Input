@@ -64,12 +64,38 @@ def _empty_result(url):
     }
 
 
+TUNNEL_NETWORK = ipaddress.ip_network("198.18.0.0/15")
+TUNNEL_ENV = "SAND_EGRESS_TUNNEL_PROXY_ADDR"
+TUNNEL_WARNING = (
+    "Connected through the Grok Bot egress tunnel. "
+    "DNS returned an address in 198.18.0.0/15. "
+    "TLS was verified for the original hostname."
+)
+
+
 def address_is_public(ip):
     if not ip.is_global:
         return False
     if ip.version == 6 and ip.ipv4_mapped is not None:
         return False
     return True
+
+
+def address_is_tunnel(ip):
+    return ip.version == 4 and ip in TUNNEL_NETWORK
+
+
+def tunnel_enabled(allow_tunnel):
+    """The benchmark range is a route only for the bot egress tunnel."""
+    if not allow_tunnel:
+        return False
+    return bool(os.environ.get(TUNNEL_ENV, "").strip())
+
+
+def address_is_connectable(ip, allow_tunnel):
+    if address_is_public(ip):
+        return True
+    return tunnel_enabled(allow_tunnel) and address_is_tunnel(ip)
 
 
 def canonical_host(hostname):
@@ -109,8 +135,14 @@ def validate_url(url):
     return parts, host
 
 
-def public_addresses(host, port):
-    """Resolve ``host`` and reject the set unless every answer is public."""
+def public_addresses(host, port, allow_tunnel=False):
+    """Resolve ``host`` and reject any answer that is not public.
+
+    A resolved address in 198.18.0.0/15 is accepted only when ``allow_tunnel``
+    is true and ``SAND_EGRESS_TUNNEL_PROXY_ADDR`` is set. A mix that includes
+    any other nonpublic answer is rejected. Literal IPs are judged earlier
+    by ``validate_url`` and never use this exception.
+    """
     try:
         infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
     except socket.gaierror as exc:
@@ -119,9 +151,16 @@ def public_addresses(host, port):
         raise ValueError("Host has no addresses")
     for _family, _kind, _proto, _canon, sockaddr in infos:
         ip = ipaddress.ip_address(sockaddr[0])
-        if not address_is_public(ip):
+        if not address_is_connectable(ip, allow_tunnel):
             raise ValueError("Nonpublic destination rejected")
     return infos
+
+
+def resolved_uses_tunnel(addresses):
+    for _family, _kind, _proto, _canon, sockaddr in addresses:
+        if address_is_tunnel(ipaddress.ip_address(sockaddr[0])):
+            return True
+    return False
 
 
 def next_hop(current_url, location, scheme):
@@ -171,13 +210,21 @@ def read_successful_body(response):
     return html, warnings
 
 
-def fetch_html(url):
-    """Fetch decoded HTML. Connects only to a resolved public address."""
+def fetch_html(url, allow_tunnel=False):
+    """Fetch decoded HTML. Connects to a resolved public address.
+
+    On the Grok Bot target, a 198.18.0.0/15 answer is the egress tunnel when
+    that environment variable is set. SNI and the Host header stay the
+    original hostname.
+    """
     current = url
+    used_tunnel = False
     for hop in range(MAX_REDIRECTS + 1):
         parts, host = validate_url(current)
         port = 443 if parts.scheme == "https" else 80
-        addresses = public_addresses(host, port)
+        addresses = public_addresses(host, port, allow_tunnel=allow_tunnel)
+        if resolved_uses_tunnel(addresses):
+            used_tunnel = True
         family, socktype, proto, _canon, sockaddr = addresses[0]
         raw_sock = socket.socket(family, socktype, proto)
         raw_sock.settimeout(SOCKET_TIMEOUT_SECONDS)
@@ -213,6 +260,8 @@ def fetch_html(url):
                 continue
             html, warnings = read_successful_body(response)
             response.close()
+            if used_tunnel:
+                warnings.insert(0, TUNNEL_WARNING)
             return html, current, warnings
         except socket.timeout as exc:
             raise TimeoutError("Timed out after 10 seconds waiting for the server") from exc
@@ -281,12 +330,14 @@ def extract_html(html, url):
     }
 
 
-def process(url, fetcher=None, extractor=None):
+def process(url, fetcher=None, extractor=None, allow_tunnel=False):
     result = _empty_result(url)
     html = None
     try:
         validate_url(url)
-        html, final, warnings = (fetcher or fetch_html)(url)
+        if fetcher is None:
+            fetcher = lambda current: fetch_html(current, allow_tunnel=allow_tunnel)
+        html, final, warnings = fetcher(url)
         result["final_url"] = final
         result["warnings"] = list(warnings)
         extracted = (extractor or extract_html)(html, final)
@@ -386,6 +437,7 @@ def main(argv=None):
     parser.add_argument("url")
     parser.add_argument("--output")
     parser.add_argument("--retain-html", action="store_true")
+    parser.add_argument("--target", choices=("bot", "mac"))
     args = parser.parse_args(argv)
     if not hasattr(signal, "SIGALRM"):
         print("Unix SIGALRM is required", file=sys.stderr)
@@ -393,7 +445,7 @@ def main(argv=None):
     signal.signal(signal.SIGALRM, _alarm)
     signal.alarm(TOTAL_DEADLINE_SECONDS)
     try:
-        result, html = process(args.url)
+        result, html = process(args.url, allow_tunnel=args.target == "bot")
     finally:
         signal.alarm(0)
     output = Path(args.output).expanduser() if args.output else default_output()

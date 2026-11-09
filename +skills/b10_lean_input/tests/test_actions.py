@@ -81,6 +81,26 @@ class DispatchTests(unittest.TestCase):
             code = actions.dispatch("do install", home, "mac")
             self.assertEqual(code, 2)
 
+    def test_do_passes_bot_target_to_extractor(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            runtime = install_runtime.destinations(home, "bot")["runtime"]
+            runtime.mkdir(parents=True)
+            (runtime / "extract_url.py").write_text("# placeholder\n", encoding="utf-8")
+            python = install_runtime.destinations(home, "bot")["venv"] / "bin" / "python"
+            python.parent.mkdir(parents=True)
+            log = home / "argv.txt"
+            python.write_text(
+                "#!/bin/sh\nprintf '%s\\n' \"$@\" > " + str(log) + "\nexit 0\n",
+                encoding="utf-8",
+            )
+            python.chmod(0o755)
+            code = actions.dispatch("https://example.com/article", home, "bot")
+            self.assertEqual(code, 0)
+            recorded = log.read_text(encoding="utf-8").splitlines()
+            self.assertIn("--target", recorded)
+            self.assertEqual(recorded[recorded.index("--target") + 1], "bot")
+
     def test_uninstall_without_manifest_removes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp) / "home"
