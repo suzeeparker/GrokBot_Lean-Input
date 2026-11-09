@@ -1,7 +1,7 @@
 """Interpret one lean-input-trafilatura request.
 
 The action is the first standalone word: install, uninstall, explain, or do.
-Any other first word leaves the whole task on the implied do action.
+scrape is an alias of do. Any other first word leaves the whole task on the implied do action.
 This file is the helper the skill runs. It is not a product shell command
 and it does not define a slash command.
 """
@@ -20,6 +20,7 @@ import install_runtime
 from install_runtime import InstallError
 
 ACTIONS = {"install", "uninstall", "explain", "do"}
+DO_ALIASES = {"do", "scrape"}
 URL_RE = re.compile(r"https?://[^\s<>'\"]+")
 OUTPUT_RE = re.compile(r"(?:^|\s)(?:--output|output)\s+(?:\"([^\"]+)\"|(\S+))", re.IGNORECASE)
 RETAIN_RE = re.compile(r"(?:--retain-html|\bretain\s+html\b)", re.IGNORECASE)
@@ -40,8 +41,11 @@ def parse_dispatch(text):
         if not current:
             return "do", ""
         token, _, rest = current.partition(" ")
-    if token.isalpha() and token.casefold() in ACTIONS:
-        return token.casefold(), rest.strip()
+    folded = token.casefold()
+    if token.isalpha() and (folded in ACTIONS or folded in DO_ALIASES):
+        if folded in DO_ALIASES:
+            return "do", rest.strip()
+        return folded, rest.strip()
     return "do", current
 
 

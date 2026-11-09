@@ -25,6 +25,8 @@ LOSS_WARNING = (
 RUNTIME_FILES = (
     "constants.py",
     "extract_url.py",
+    "keywords.py",
+    "stopwords_en.txt",
     "actions.py",
     "install_runtime.py",
     "requirements.txt",

@@ -1,6 +1,6 @@
 ---
 name: lean-input-trafilatura
-description: "Extract the main text and metadata of one public HTTP or HTTPS page into UTF-8 JSON and a character-count sidecar. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, or do, or supplies a public URL. The do action is implied when no action word is given. Runs in Cursor on this Mac only."
+description: "Extract the main text and metadata of one public HTTP or HTTPS page into UTF-8 JSON with up to 10 frequency keywords and a character-count sidecar. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, or scrape, or says scrape and a public URL. scrape is an alias of do. The do action is implied when no action word is given. Runs in Cursor on this Mac only."
 ---
 
 # lean-input-trafilatura — Cursor on this Mac
@@ -24,7 +24,7 @@ Invoke the interpreter by that absolute path. Do not activate the virtual enviro
 
 ## Dispatch
 
-Take the user's text. A leading `#` is optional. A leading token `lean-input-trafilatura` is optional. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, or `do` in any letter case, that is the action and the remainder is the task. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `do install` is a do task, not an install. `installing` is a do task.
+Take the user's text. A leading `#` is optional. A leading token `lean-input-trafilatura` is optional. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, `do`, or `scrape` in any letter case, that is the action and the remainder is the task. `scrape` is an alias of `do` and follows the same rules. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `do scrape https://example.com/` is a do task whose text starts with scrape. `scraping` is not the alias. `do install` is a do task, not an install.
 
 When the helper exists, pass the original user text unchanged:
 
@@ -92,7 +92,7 @@ Default output is `$HOME/Tools/lean-input/output/page-<unique>.json`. The siblin
 
 ## Output
 
-UTF-8 JSON fields: `requested_url`, `final_url`, `title`, `author`, `publication_date`, `text`, `status`, `warnings`, `error`. Missing metadata is null. The metrics sidecar, not this JSON, stores `decoded_html_characters`, `extracted_text_characters`, and `serialized_json_characters`. The unit is Unicode code points. Do not report bytes, tokens, or estimated savings. JSON is not inherently shorter.
+UTF-8 JSON fields: `requested_url`, `final_url`, `title`, `author`, `publication_date`, `text`, `keywords`, `status`, `warnings`, `error`. Missing metadata is null. `keywords` is at most 10 objects, `{"keyword": string, "score": number}`, most important first. The score is the word count in the extracted text plus 1 when that word also appears in the title. English stopwords, tokens shorter than 3 characters, and tokens with no letters are dropped. This is a frequency heuristic, not a semantic ranking, and it is weak for pages that are not in English. An error or empty text yields an empty list. The metrics sidecar is unchanged: `decoded_html_characters`, `extracted_text_characters`, and `serialized_json_characters`. The unit is Unicode code points. Do not report bytes, tokens, or estimated savings. JSON is not inherently shorter.
 
 ## Safety
 

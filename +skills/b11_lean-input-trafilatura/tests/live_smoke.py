@@ -34,6 +34,7 @@ def main(argv):
         "publication_date": result["publication_date"],
         "warnings": result["warnings"],
         "text": result["text"],
+        "keywords": result["keywords"],
         "metrics": metrics,
         "serialized_matches_file": metrics["serialized_json_characters"] == len(written),
         "decoded_html_was_not_printed": True,
