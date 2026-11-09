@@ -61,6 +61,8 @@ def build_tree(repo: Path, target: str, revision: str, out_dir: Path) -> Path:
     tests = platform / "tests"
     if tests.is_dir():
         for path in sorted(item for item in tests.rglob("*") if item.is_file()):
+            if "__pycache__" in path.parts or path.suffix == ".pyc":
+                continue
             _copy(path, root / "tests" / path.relative_to(tests))
     readme = (
         f"# scraper-viewer {target} candidate\n\n"
