@@ -8,7 +8,7 @@ Official references checked on 2026-11-08:
 - Trafilatura Python API: `extract(..., output_format="json", with_metadata=True, include_comments=False, include_tables=True)` returns a JSON string or `None`. Metadata uses `title`, `author`, and `date`. This slice maps `date` to `publication_date`.
 - Direct pin used for a fresh install: `trafilatura==2.3.1` (wheel `trafilatura-2.3.1-py3-none-any.whl`, sha256 `f86bad2ee36f82884e14dee84c83aae0f0ac0127da5c65764e82f3846716b822`).
 - Cursor user skills: `~/.cursor/skills/<name>/SKILL.md` with `name` and `description` frontmatter. `name` must match the folder.
-- Grok Bot skills: saved in the private skill library and enabled per Bot. A file write is not that step. See `Onboarding.md`.
+- Grok Bot skills: save the skill in the Grok Bot skill library with the name `lean-input-trafilatura`, the description from its frontmatter, and the skill file as the body. It is active once the Bot can load it by name. The library is shared by all of the owner's bots. A file write is not that step. See `Onboarding.md`.
 
 Optional extras (`trafilatura[all]`, language detection, pycurl) are out of scope and are not installed.
 

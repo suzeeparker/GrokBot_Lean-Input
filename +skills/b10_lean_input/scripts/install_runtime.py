@@ -368,9 +368,9 @@ def _registration(target):
         return {
             "state": "pending-host-api",
             "note": (
-                "Files under ~/Tools/lean-input-bot are not a registered Grok Bot skill. "
-                "Save the skill through the Grok Bot skill library and enable it under "
-                "Connect apps, Private skills. See ONBOARDING.md."
+                "Files under ~/Tools/lean-input-bot are not a registered Grok Bot skill "
+                "until it is saved in the Grok Bot skill library as lean-input-trafilatura; "
+                "it is active once the Bot can load it by name."
             ),
         }
     return {

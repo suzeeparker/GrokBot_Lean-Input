@@ -60,7 +60,7 @@ Installing changes this computer. Show the plan before changing anything.
 4. Read the plan to the owner. It must show files to create, whether the virtual environment and Trafilatura will be created or reused, and the registration note. Exit 3 means approval is still required. If the plan reports an unmanaged file or an incompatible Trafilatura, stop. Do not overwrite or upgrade it.
 5. After the owner approves that plan, run the same command with `--approve`. Add `--update` only when the owner also approved replacing managed files that differ. `--update` still does not replace unmanaged files and does not upgrade Trafilatura.
 6. A second approved install with the same revision and the same files must change nothing.
-7. Copying files does not register the skill. After the files exist, save a private skill through the Grok Bot skill library: name `lean-input-trafilatura`, description from this file's frontmatter, body this file. Then enable it for this Bot under Connect apps, the connected count, Private skills. Tell the owner the file copy is not active until that enablement is confirmed. Do not call an undocumented HTTP registration URL.
+7. Copying files does not register the skill. After the files exist, save the skill through the Grok Bot skill library: name `lean-input-trafilatura`, description from this file's frontmatter, body this file. It is active once the Bot can load it by name. The library is shared by all of the owner's bots. Do not call an undocumented HTTP registration URL.
 8. Record the manifest's source revision, interpreter path, and Trafilatura version. Do not claim the skill is active before the Bot can find it by name.
 
 Fresh installs request `trafilatura==2.3.1` only. A preexisting 2.x install is reused and left at its version, with a warning when that version is not 2.3.1. Any other major version stops the install. The shared virtual environment is not deleted or recreated when it is already valid.
@@ -87,7 +87,7 @@ A public `http` or `https` URL is required. An output path is optional (`output 
 
 If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do not install in the same turn.
 
-Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 means a JSON error file was written. Exit 2 means the URL or the output path was refused. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
+Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 is a fetch or extraction failure, and an error JSON file was written. Exit 2 is a URL refused before any network attempt, and an error JSON file was still written, or an output path that was refused and not overwritten. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
 
 Default output is `$HOME/Tools/lean-input/output/page-<unique>.json`. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
 

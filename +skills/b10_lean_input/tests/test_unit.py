@@ -226,7 +226,7 @@ class UnitTests(unittest.TestCase):
                 env=env,
                 check=False,
             )
-            self.assertEqual(proc.returncode, 1)
+            self.assertEqual(proc.returncode, 2)
             self.assertNotIn("<html", proc.stdout)
             summary = json.loads(proc.stdout)
             self.assertEqual(summary["status"], "error")
@@ -235,6 +235,26 @@ class UnitTests(unittest.TestCase):
             self.assertIsNone(summary["metrics"]["decoded_html_characters"])
             sidecar = json.loads(output.with_suffix(".metrics.json").read_text(encoding="utf-8"))
             self.assertEqual(sidecar["serialized_json_characters"], len(output.read_text(encoding="utf-8")))
+
+    def test_cli_localhost_refusal_exits_2_and_fetch_failure_exits_1(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            refused = Path(tmp) / "localhost.json"
+            code = m.main(["http://localhost/", "--output", str(refused)])
+            self.assertEqual(code, 2)
+            loaded = json.loads(refused.read_text(encoding="utf-8"))
+            self.assertEqual(loaded["status"], "error")
+            self.assertIn("Localhost is forbidden", loaded["error"])
+            self.assertIsNone(loaded["text"])
+            fetched = Path(tmp) / "fetch.json"
+
+            def fail_fetch(_url, allow_tunnel=False):
+                raise ValueError("Nonpublic destination rejected")
+
+            with patch.object(m, "fetch_html", fail_fetch):
+                code = m.main(["https://example.com/article", "--output", str(fetched)])
+            self.assertEqual(code, 1)
+            loaded = json.loads(fetched.read_text(encoding="utf-8"))
+            self.assertIn("Nonpublic destination rejected", loaded["error"])
 
 
 if __name__ == "__main__":

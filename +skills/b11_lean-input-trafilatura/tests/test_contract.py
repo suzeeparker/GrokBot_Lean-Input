@@ -53,9 +53,10 @@ class ContractTests(unittest.TestCase):
             for phrase in REQUIRED:
                 self.assertIn(phrase, text, folder)
         self.assertIn("$HOME/Tools/lean-input-bot/.venv/bin/python", bot)
-        self.assertIn("file copy is not active", bot)
-        self.assertIn("Connect apps", bot)
-        self.assertIn("Private skills", bot)
+        self.assertIn("Grok Bot skill library", bot)
+        self.assertIn("active once the Bot can load it by name", bot)
+        self.assertIn("shared by all of the owner's bots", bot)
+        self.assertNotIn("Connect apps", bot)
         self.assertIn("$HOME/Tools/lean-input/.venv/bin/python", mac)
         self.assertIn("$HOME/.cursor/skills/lean-input-trafilatura", mac)
         self.assertIn("Customize", mac)

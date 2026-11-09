@@ -10,7 +10,7 @@ Installed snapshots are not git checkouts. Do not clone the repository onto eith
 - [ ] The onboarding plan was shown and approved before files changed.
 - [ ] The manifest lists checksums, the interpreter path, Trafilatura's version, and whether the virtual environment was created or reused.
 - [ ] A preexisting compatible tool was not upgraded. An unmanaged file was not overwritten.
-- [ ] The private skill `lean-input-trafilatura` was saved through the Grok Bot skill library and enabled under Connect apps, Private skills. A file under `~/Tools` was not treated as activation.
+- [ ] The private skill `lean-input-trafilatura` was saved in the Grok Bot skill library and the Bot can load it by name. The library is shared by all of the owner's bots. A file under `~/Tools` was not treated as activation.
 - [ ] In the Grok Bot app, `lean-input-trafilatura explain` changes nothing and reports the bot paths and the installed version.
 - [ ] `lean-input-trafilatura https://example.com/` or another ordinary public URL the owner chooses writes JSON and a metrics sidecar, reports the three measured character counts, and does not paste raw HTML into chat.
 - [ ] An invalid URL, a timeout, a non-HTML response, or an empty extraction fails with a clear status. A challenge or paywall is not bypassed.

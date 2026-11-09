@@ -86,7 +86,7 @@ A public `http` or `https` URL is required. An output path is optional (`output 
 
 If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do not install in the same turn.
 
-Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 means a JSON error file was written. Exit 2 means the URL or the output path was refused. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
+Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 is a fetch or extraction failure, and an error JSON file was written. Exit 2 is a URL refused before any network attempt, and an error JSON file was still written, or an output path that was refused and not overwritten. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
 
 Default output is `$HOME/Tools/lean-input/output/page-<unique>.json`. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
 

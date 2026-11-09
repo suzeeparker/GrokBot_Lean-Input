@@ -80,6 +80,10 @@ The text is shorter than the HTML because boilerplate and markup were dropped. T
 
 Python 3.12.3 on this checkout, after allowing 198.18.0.0/15 only for `--target bot` when `SAND_EGRESS_TUNNEL_PROXY_ADDR` is set. 34 tests, OK: 1 packaging, 24 shared, 9 Trafilatura. The same `https://example.com/` smoke, without that variable, stayed a direct public connection: decoded HTML 577, extracted text 156, serialized JSON 632. No tunnel warning was added.
 
+## Refusal exit code and registration wording
+
+Python 3.12.3. 36 tests, OK: 1 packaging, 26 shared, 9 Trafilatura. `http://localhost/` now exits 2 and still writes the error JSON. A fetch failure still exits 1. The same `https://example.com/` smoke, with no tunnel variable, remained decoded HTML 577, extracted text 156, serialized JSON 632.
+
 ## Not done
 
 - No skill was registered in the Grok Bot app

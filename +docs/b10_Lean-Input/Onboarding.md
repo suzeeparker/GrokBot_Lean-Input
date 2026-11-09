@@ -48,17 +48,15 @@ The manifest records source revision, interpreter, dependency version, ownership
 
 ## 5. Register on the Grok Bot computer
 
-Writing `SKILL.md` under `$HOME/Tools/lean-input-bot/` does not register a skill.
+Writing `SKILL.md` under `$HOME/Tools/lean-input-bot/` does not register a skill. This installer does not call a network API.
 
-Official Grok Bot documentation (Skills and routines, read 2026-11-08) says a skill is saved by asking the Bot to save the process, and a private skill is enabled per Bot under Connect apps, the connected count, Private skills. This installer does not call a network API. No public registration endpoint was verified for this slice; do not invent one.
-
-While you are the already-running Bot, save a private skill:
+While you are the already-running Bot, save the skill through the Grok Bot skill library:
 
 - name: `lean-input-trafilatura`
 - description: the `description` frontmatter of the installed skill text
 - body: the installed `SKILL.md`
 
-Then tell the owner to enable it for this Bot if you cannot see that control. Ask for the skill by name and confirm it answers `explain` without changing files. Until that works, report the runtime as installed and the skill as not active.
+It is active once the Bot can load it by name. The library is shared by all of the owner's bots. Ask for the skill by name and confirm it answers `explain` without changing files. Until that works, report the runtime as installed and the skill as not active. Deleting the skill in that library removes it for every Bot.
 
 ## 6. Discover on the Mac
 

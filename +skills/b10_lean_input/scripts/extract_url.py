@@ -50,6 +50,10 @@ REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 HTML_TYPES = {"text/html", "application/xhtml+xml"}
 
 
+class UrlRefusal(ValueError):
+    """The requested URL failed validation before any network attempt."""
+
+
 def _empty_result(url):
     return {
         "requested_url": url if isinstance(url, str) else None,
@@ -335,6 +339,9 @@ def process(url, fetcher=None, extractor=None, allow_tunnel=False):
     html = None
     try:
         validate_url(url)
+    except ValueError as exc:
+        raise UrlRefusal(str(exc)) from exc
+    try:
         if fetcher is None:
             fetcher = lambda current: fetch_html(current, allow_tunnel=allow_tunnel)
         html, final, warnings = fetcher(url)
@@ -444,8 +451,16 @@ def main(argv=None):
         return 2
     signal.signal(signal.SIGALRM, _alarm)
     signal.alarm(TOTAL_DEADLINE_SECONDS)
+    url_refused = False
     try:
-        result, html = process(args.url, allow_tunnel=args.target == "bot")
+        try:
+            result, html = process(args.url, allow_tunnel=args.target == "bot")
+        except UrlRefusal as exc:
+            result = _empty_result(args.url)
+            result["error"] = str(exc)
+            result["status"] = "error"
+            html = None
+            url_refused = True
     finally:
         signal.alarm(0)
     output = Path(args.output).expanduser() if args.output else default_output()
@@ -462,7 +477,9 @@ def main(argv=None):
         "error": result["error"],
     }
     print(json.dumps(summary, ensure_ascii=False))
-    return 0 if result["status"] == "success" else 1
+    if result["status"] == "success":
+        return 0
+    return 2 if url_refused else 1
 
 
 if __name__ == "__main__":

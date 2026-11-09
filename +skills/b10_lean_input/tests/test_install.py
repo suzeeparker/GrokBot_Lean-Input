@@ -181,6 +181,16 @@ class InstallTests(unittest.TestCase):
             )
             self.assertEqual(probe.stdout.strip(), "2.3.1")
 
+    def test_bot_registration_note_names_the_skill_library(self):
+        note = install_runtime._registration("bot")["note"]
+        self.assertEqual(
+            note,
+            "Files under ~/Tools/lean-input-bot are not a registered Grok Bot skill "
+            "until it is saved in the Grok Bot skill library as lean-input-trafilatura; "
+            "it is active once the Bot can load it by name.",
+        )
+        self.assertNotIn("Connect apps", note)
+
 
 if __name__ == "__main__":
     unittest.main()
