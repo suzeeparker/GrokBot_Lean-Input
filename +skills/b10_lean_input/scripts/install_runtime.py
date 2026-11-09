@@ -18,7 +18,7 @@ import subprocess
 import sys
 import uuid
 
-from constants import COMPATIBLE_MAJOR, COMPONENT, PYTHON_MIN, RUNTIME_FILES, TRAFILATURA_PIN
+from constants import COMPATIBLE_MAJOR, COMPONENT, PYTHON_MIN, RUNTIME_FILES, TRAFILATURA_PIN, output_directory
 
 
 class InstallError(Exception):
@@ -70,7 +70,7 @@ def destinations(home, target):
         "skill": skill,
         "venv": base / ".venv",
         "manifest": base / "manifests" / f"{COMPONENT}.json",
-        "output": home / "Tools" / "lean-input" / "output",
+        "output": output_directory(target, home),
     }
 
 
@@ -92,8 +92,8 @@ def resolve_source(root, target):
     package_script = root / "runtime" / "extract_url.py"
     if repo_script.is_file():
         skill_name = "bot" if target == "bot" else "cursor"
-        skill = root / "+skills" / "b11_lean-input-trafilatura" / skill_name / "SKILL.md"
-        onboarding = root / "+docs" / "b10_Lean-Input" / "Onboarding.md"
+        skill = root / "+skills" / "b11_scraper-viewer" / skill_name / "SKILL.md"
+        onboarding = root / "+docs" / "B11_Scraper-Viewer" / "Onboarding.md"
         runtime = root / "+skills" / "b10_lean_input" / "scripts"
         layout = "repo"
         candidate = None
@@ -104,7 +104,7 @@ def resolve_source(root, target):
         layout = "package"
         candidate = root / "CANDIDATE.json"
     else:
-        raise InstallError(f"No lean-input payload at {root}")
+        raise InstallError(f"No scraper-viewer payload at {root}")
     files = {name: runtime / name for name in RUNTIME_FILES}
     files["ONBOARDING.md"] = onboarding
     files["SKILL.md"] = skill
@@ -144,7 +144,7 @@ def load_manifest(path: Path):
     except (OSError, json.JSONDecodeError) as exc:
         raise InstallError(f"Existing manifest cannot be read: {exc}") from exc
     if data.get("schema_version") != 1 or data.get("component") != COMPONENT:
-        raise InstallError("Existing manifest is not a lean-input-trafilatura schema 1 manifest")
+        raise InstallError("Existing manifest is not a scraper-viewer schema 1 manifest")
     return data
 
 
@@ -369,14 +369,14 @@ def _registration(target):
             "state": "pending-host-api",
             "note": (
                 "Files under ~/Tools/lean-input-bot are not a registered Grok Bot skill "
-                "until it is saved in the Grok Bot skill library as lean-input-trafilatura; "
+                "until it is saved in the Grok Bot skill library as scraper-viewer; "
                 "it is active once the Bot can load it by name."
             ),
         }
     return {
         "state": "cursor-skill-file",
         "note": (
-            "SKILL.md was placed at ~/.cursor/skills/lean-input-trafilatura/ for Cursor discovery. "
+            "SKILL.md was placed at ~/.cursor/skills/scraper-viewer/ for Cursor discovery. "
             "Confirm it is listed in Customize, Skills, before treating it as active. "
             "Do not turn on Sync Skills for Cloud Agents as part of this install."
         ),
@@ -613,29 +613,36 @@ def explain(home, target):
         warning = manifest.get("dependency", {}).get("warning")
         interpreter = manifest.get("interpreter", interpreter)
     lines = [
-        "lean-input-trafilatura extracts the main text and available metadata of one public HTTP or HTTPS page",
+        "scraper-viewer extracts the main text and available metadata of one public HTTP or HTTPS page",
         "into a UTF-8 JSON file and a separate character-count sidecar. It is the first Lean Input tool.",
         "jq and the other Lean Input tools are not part of this skill.",
         f"Execution location: {location}.",
         "Required input: one public http or https URL. An output path is optional.",
         "Examples:",
-        "  lean-input-trafilatura install",
-        "  lean-input-trafilatura uninstall",
-        "  lean-input-trafilatura explain",
-        "  lean-input-trafilatura do https://example.com/",
-        "  lean-input-trafilatura scrape https://example.com/",
-        "  lean-input-trafilatura https://example.com/",
+        "  scraper-viewer install",
+        "  scraper-viewer uninstall",
+        "  scraper-viewer explain",
+        "  scraper-viewer do https://example.com/",
+        "  scraper-viewer scrape https://example.com/",
+        "  scraper-viewer https://example.com/",
         "scrape is an alias of do and follows the same rules.",
         "scrape and do with only a URL are the page option.",
         "scrape seo, scrape aeo, and scrape schema can be combined. scrape all runs all four.",
         "An unknown option word before the URL is refused and nothing is fetched.",
+        "lean-input-trafilatura is a deprecated invocation alias for one release.",
         "A hostname with no scheme, such as sicomm.net or www.sicomm.net/path, is requested as https:// plus that token.",
         "The summary says https:// was added. http:// is never added. localhost and a nonpublic IP are refused.",
+        "The extractor library is Trafilatura. The skill name is scraper-viewer.",
         "A missing seo, aeo, or schema element is the string not found. The command prints one summary.",
         f"Interpreter: {interpreter}",
         f"Helpers: {dest['runtime']}",
         f"Skill file: {dest['skill']}",
         f"Default output directory: {dest['output']}",
+        *(
+            ["Each Mac run rewrites d11_files.js in that folder."]
+            if target == "mac"
+            else []
+        ),
         f"Pinned fresh install: trafilatura=={TRAFILATURA_PIN}",
         f"Known installed Trafilatura: {version if version else 'not recorded'}",
     ]
@@ -645,7 +652,7 @@ def explain(home, target):
         lines.append(f"Source revision: {manifest.get('source_revision')}")
         lines.append(manifest.get("registration", {}).get("note", ""))
     else:
-        lines.append("This target has no lean-input-trafilatura manifest. Nothing was installed by this command.")
+        lines.append("This target has no scraper-viewer manifest. Nothing was installed by this command.")
     lines.extend(
         [
             "Limitations: heuristic extraction can drop or flatten tables, links, and browser-rendered content.",
@@ -668,7 +675,7 @@ def _print(payload):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Install or remove lean-input-trafilatura files.")
+    parser = argparse.ArgumentParser(description="Install or remove scraper-viewer files.")
     sub = parser.add_subparsers(dest="command", required=True)
 
     def add_target(command):

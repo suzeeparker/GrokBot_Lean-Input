@@ -8,7 +8,7 @@ Official references checked on 2026-11-08:
 - Trafilatura Python API: `extract(..., output_format="json", with_metadata=True, include_comments=False, include_tables=True)` returns a JSON string or `None`. Metadata uses `title`, `author`, and `date`. This slice maps `date` to `publication_date`.
 - Direct pin used for a fresh install: `trafilatura==2.3.1` (wheel `trafilatura-2.3.1-py3-none-any.whl`, sha256 `f86bad2ee36f82884e14dee84c83aae0f0ac0127da5c65764e82f3846716b822`).
 - Cursor user skills: `~/.cursor/skills/<name>/SKILL.md` with `name` and `description` frontmatter. `name` must match the folder.
-- Grok Bot skills: save the skill in the Grok Bot skill library with the name `lean-input-trafilatura`, the description from its frontmatter, and the skill file as the body. It is active once the Bot can load it by name. The library is shared by all of the owner's bots. A file write is not that step. See `Onboarding.md`.
+- Grok Bot skills: save the skill in the Grok Bot skill library with the name `scraper-viewer`, the description from its frontmatter, and the skill file as the body. It is active once the Bot can load it by name. The library is shared by all of the owner's bots. A file write is not that step. See `Onboarding.md`.
 
 Optional extras (`trafilatura[all]`, language detection, pycurl) are out of scope and are not installed.
 
@@ -17,12 +17,12 @@ Optional extras (`trafilatura[all]`, language detection, pycurl) are out of scop
 | Piece | Bot computer | Mac |
 |---|---|---|
 | Interpreter | `$HOME/Tools/lean-input-bot/.venv/bin/python` | `$HOME/Tools/lean-input/.venv/bin/python` |
-| Helpers | `$HOME/Tools/lean-input-bot/runtime/lean-input-trafilatura/` | `$HOME/Tools/lean-input/runtime/lean-input-trafilatura/` |
-| Skill | Host skill library, plus an unregistered text copy under `skill-source/` | `$HOME/.cursor/skills/lean-input-trafilatura/SKILL.md` |
-| Manifest | `$HOME/Tools/lean-input-bot/manifests/lean-input-trafilatura.json` | `$HOME/Tools/lean-input/manifests/lean-input-trafilatura.json` |
-| Output | `$HOME/Tools/lean-input/output/` | `$HOME/Tools/lean-input/output/` |
+| Helpers | `$HOME/Tools/lean-input-bot/runtime/scraper-viewer/` | `$HOME/Tools/lean-input/runtime/scraper-viewer/` |
+| Skill | Host skill library, plus an unregistered text copy under `skill-source/` | `$HOME/.cursor/skills/scraper-viewer/SKILL.md` |
+| Manifest | `$HOME/Tools/lean-input-bot/manifests/scraper-viewer.json` | `$HOME/Tools/lean-input/manifests/scraper-viewer.json` |
+| Output | `$HOME/Tools/lean-input/output/` | `/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer/` |
 
-The output directory is created on the first extraction, not by the installer, and is not removed on uninstall.
+The output directory is created on the first extraction, not by the installer, and is not removed on uninstall. The Mac path is the output setting. `SCRAPER_VIEWER_OUTPUT_DIR` overrides it. A Mac run rewrites `d11_files.js` in that folder. The extractor library remains Trafilatura.
 
 The Grok Bot computer may resolve every public name to 198.18.0.0/15 and forward it through `SAND_EGRESS_TUNNEL_PROXY_ADDR`. Extraction allows that resolved range only for `--target bot` while the variable is set. The Mac target does not. A URL that already contains a 198.18 address is refused on both.
 
@@ -35,13 +35,13 @@ python3 -m venv /tmp/lean-input-dev-venv
 /tmp/lean-input-dev-venv/bin/python -m pip install --disable-pip-version-check -r +skills/b10_lean_input/scripts/requirements.txt
 /tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b00_packaging/tests -v
 /tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b10_lean_input/tests -v
-/tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b11_lean-input-trafilatura/tests -v
+/tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b11_scraper-viewer/tests -v
 ```
 
 Optional live page, only when outbound HTTP is allowed:
 
 ```sh
-/tmp/lean-input-dev-venv/bin/python +skills/b11_lean-input-trafilatura/tests/live_smoke.py https://example.com/
+/tmp/lean-input-dev-venv/bin/python +skills/b11_scraper-viewer/tests/live_smoke.py https://example.com/
 ```
 
 Build candidate archives after the commit exists. Replace the revision with `git rev-parse HEAD`. Do not tag a release.

@@ -36,5 +36,5 @@ a clear seperation of client versus server code.
 - .git    - Git repository data
 
 ## Lean Input
-The first Lean Input tool is `lean-input-trafilatura`. Repository source is under `+skills/` and `+docs/b10_Lean-Input/`. Installed skill names do not use the `b##` prefix. Commit subjects and folder rules are in `CONTRIBUTING.md`. The starter client and server trees are separate from that slice.
+The first Lean Input tool is `scraper-viewer`. Repository source is under `+skills/` and `+docs/B11_Scraper-Viewer/`. Installed skill names do not use the `b##` prefix. Commit subjects and folder rules are in `CONTRIBUTING.md`. The starter client and server trees are separate from that slice.
 

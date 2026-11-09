@@ -1,7 +1,7 @@
 """Optional public fetch. Not part of unittest discovery.
 
 Usage:
-  /path/to/venv/bin/python +skills/b11_lean-input-trafilatura/tests/live_smoke.py https://example.com/
+  /path/to/venv/bin/python +skills/b11_scraper-viewer/tests/live_smoke.py https://example.com/
 """
 
 from __future__ import annotations

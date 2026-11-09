@@ -1,4 +1,4 @@
-"""Thin repository entry for lean-input-trafilatura.
+"""Thin repository entry for scraper-viewer.
 
 Shared code stays in +skills/b10_lean_input/scripts. This file only adds that
 directory to sys.path and forwards to actions.main. An installed runtime runs

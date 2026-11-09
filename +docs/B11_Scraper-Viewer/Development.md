@@ -13,15 +13,15 @@ python3 -m venv /tmp/lean-input-dev-venv
 /tmp/lean-input-dev-venv/bin/python -m pip install --disable-pip-version-check -r +skills/b10_lean_input/scripts/requirements.txt
 /tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b00_packaging/tests -v
 /tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b10_lean_input/tests -v
-/tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b11_lean-input-trafilatura/tests -v
+/tmp/lean-input-dev-venv/bin/python -m unittest discover -s +skills/b11_scraper-viewer/tests -v
 ```
 
-`+` and hyphens are not Python packages. Each `discover` uses the test directory itself as the import root. `+skills/b11_lean-input-trafilatura/tests/test_integration.py` imports Trafilatura and fails if the pin is not 2.3.1. `+skills/b10_lean_input/tests/test_install.py` includes one real virtual-environment install under a temporary home. Installer refusal, rollback, and uninstall tests also use a temporary home and do not point at the operator's real home.
+`+` and hyphens are not Python packages. Each `discover` uses the test directory itself as the import root. `+skills/b11_scraper-viewer/tests/test_integration.py` imports Trafilatura and fails if the pin is not 2.3.1. `+skills/b10_lean_input/tests/test_install.py` includes one real virtual-environment install under a temporary home. Installer refusal, rollback, and uninstall tests also use a temporary home and do not point at the operator's real home.
 
 Optional live smoke:
 
 ```sh
-/tmp/lean-input-dev-venv/bin/python +skills/b11_lean-input-trafilatura/tests/live_smoke.py https://example.com/
+/tmp/lean-input-dev-venv/bin/python +skills/b11_scraper-viewer/tests/live_smoke.py https://example.com/
 ```
 
 A live result is evidence about that URL on that network. It is not Mac acceptance and it is not Grok Bot app acceptance.
@@ -32,7 +32,7 @@ A live result is evidence about that URL on that network. It is not Mac acceptan
 
 ```sh
 python3 +skills/b00_packaging/scripts/build_candidates.py --revision "$(git rev-parse HEAD)" --out /tmp/lean-candidates
-python3 +skills/b00_packaging/scripts/compare_candidates.py /tmp/lean-candidates/lean-input-trafilatura-bot-candidate-<rev>.zip /tmp/lean-candidates/lean-input-trafilatura-mac-candidate-<rev>.zip
+python3 +skills/b00_packaging/scripts/compare_candidates.py /tmp/lean-candidates/scraper-viewer-bot-candidate-<rev>.zip /tmp/lean-candidates/scraper-viewer-mac-candidate-<rev>.zip
 ```
 
 The compare exits 1 when runtime helper hashes differ. Skill text and `CANDIDATE.json` are expected to differ between bot and Mac.

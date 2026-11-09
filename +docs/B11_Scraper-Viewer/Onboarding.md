@@ -1,6 +1,6 @@
 # Onboarding coordinator
 
-Use this file when `lean-input-trafilatura` is not registered yet. You are the coordinator, not the skill. Do not wait for the skill to appear before following these steps, and do not invent a slash command.
+Use this file when `scraper-viewer` is not registered yet. You are the coordinator, not the skill. Do not wait for the skill to appear before following these steps, and do not invent a slash command.
 
 The owner already approved preparing this candidate and opening a pull request. The owner has not approved installing it on the Grok Bot computer or the Mac. Stop and ask before the first install on either machine. Do not install on both machines in one approval.
 
@@ -52,7 +52,7 @@ Writing `SKILL.md` under `$HOME/Tools/lean-input-bot/` does not register a skill
 
 While you are the already-running Bot, save the skill through the Grok Bot skill library:
 
-- name: `lean-input-trafilatura`
+- name: `scraper-viewer`
 - description: the `description` frontmatter of the installed skill text
 - body: the installed `SKILL.md`
 
@@ -60,7 +60,7 @@ It is active once the Bot can load it by name. The library is shared by all of t
 
 ## 6. Discover on the Mac
 
-Cursor loads `$HOME/.cursor/skills/lean-input-trafilatura/SKILL.md` as a user skill (Cursor skills documentation, read 2026-11-08). The installer places that file. Ask the owner to open Customize, Skills, and confirm the name is listed. Do not turn on Sync Skills for Cloud Agents unless the owner asks. Do not claim the skill is active before it is visible.
+Cursor loads `$HOME/.cursor/skills/scraper-viewer/SKILL.md` as a user skill (Cursor skills documentation, read 2026-11-08). The installer places that file. Ask the owner to open Customize, Skills, and confirm the name is listed. Do not turn on Sync Skills for Cloud Agents unless the owner asks. Do not claim the skill is active before it is visible.
 
 ## 7. Check the helper
 

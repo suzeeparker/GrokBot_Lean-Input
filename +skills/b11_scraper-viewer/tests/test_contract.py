@@ -21,7 +21,6 @@ REQUIRED = (
     "bytes, tokens",
     "raw HTML",
     "untrusted",
-    "$HOME/Tools/lean-input/output",
 )
 
 
@@ -43,31 +42,35 @@ def frontmatter(text):
 
 class ContractTests(unittest.TestCase):
     def test_frontmatter_and_shared_rules(self):
-        bot = (ROOT / "+skills" / "b11_lean-input-trafilatura" / "bot" / "SKILL.md").read_text(encoding="utf-8")
-        mac = (ROOT / "+skills" / "b11_lean-input-trafilatura" / "cursor" / "SKILL.md").read_text(encoding="utf-8")
+        bot = (ROOT / "+skills" / "b11_scraper-viewer" / "bot" / "SKILL.md").read_text(encoding="utf-8")
+        mac = (ROOT / "+skills" / "b11_scraper-viewer" / "cursor" / "SKILL.md").read_text(encoding="utf-8")
         for text, folder in ((bot, "bot"), (mac, "cursor")):
             meta = frontmatter(text)
-            self.assertEqual(meta["name"], "lean-input-trafilatura")
+            self.assertEqual(meta["name"], "scraper-viewer")
             self.assertTrue(meta["description"])
             self.assertLess(len(meta["description"]), 1024)
             for phrase in REQUIRED:
                 self.assertIn(phrase, text, folder)
+        self.assertIn("$HOME/Tools/lean-input/output", bot)
         self.assertIn("$HOME/Tools/lean-input-bot/.venv/bin/python", bot)
         self.assertIn("Grok Bot skill library", bot)
         self.assertIn("active once the Bot can load it by name", bot)
         self.assertIn("shared by all of the owner's bots", bot)
         self.assertNotIn("Connect apps", bot)
+        self.assertIn("/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer", mac)
+        self.assertIn("d11_files.js", mac)
         self.assertIn("$HOME/Tools/lean-input/.venv/bin/python", mac)
-        self.assertIn("$HOME/.cursor/skills/lean-input-trafilatura", mac)
+        self.assertIn("$HOME/.cursor/skills/scraper-viewer", mac)
         self.assertIn("Customize", mac)
         self.assertIn("Sync Skills", mac)
         self.assertNotIn("lean-input-bot", mac)
 
     def test_shared_sources_have_no_owner_identifiers(self):
         roots = [
-            ROOT / "+skills" / "b11_lean-input-trafilatura",
+            ROOT / "+skills" / "b11_scraper-viewer",
             ROOT / "+skills" / "b10_lean_input",
             ROOT / "+skills" / "b00_packaging",
+            ROOT / "+docs" / "B11_Scraper-Viewer",
             ROOT / "+docs" / "b10_Lean-Input",
             ROOT / "+docs" / "b12_Lean-Input-JQ",
         ]

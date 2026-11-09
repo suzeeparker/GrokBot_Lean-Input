@@ -28,7 +28,7 @@ When the owner agrees to that list, and only then:
 
 - The shared virtual environment (`~/Tools/lean-input-bot/.venv` or `~/Tools/lean-input/.venv`)
 - Trafilatura and every other package in that environment
-- `$HOME/Tools/lean-input/output/` and any other user data
+- `$HOME/Tools/lean-input/output/` on the bot, the Mac d11 scraper-viewer folder, and any other user data
 - Files that are not in the manifest, including notes dropped beside the skill
 - Other skills
 - Managed files whose checksum no longer matches (reported as skipped; exit 4; the manifest keeps those entries)

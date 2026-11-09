@@ -48,21 +48,21 @@ def _copy(src: Path, dest: Path):
 
 def build_tree(repo: Path, target: str, revision: str, out_dir: Path) -> Path:
     short = revision[:12]
-    root = out_dir / f"lean-input-trafilatura-{target}-candidate-{short}"
+    root = out_dir / f"scraper-viewer-{target}-candidate-{short}"
     if root.exists():
         raise SystemExit(f"Refusing to replace {root}")
     skill_group = "bot" if target == "bot" else "cursor"
-    skill = repo / "+skills" / "b11_lean-input-trafilatura" / skill_group / "SKILL.md"
+    skill = repo / "+skills" / "b11_scraper-viewer" / skill_group / "SKILL.md"
     _copy(skill, root / "SKILL.md")
     shared = repo / "+skills" / "b10_lean_input" / "scripts"
     for name in RUNTIME_FILES:
         _copy(shared / name, root / "runtime" / name)
-    docs = repo / "+docs" / "b10_Lean-Input"
+    docs = repo / "+docs" / "B11_Scraper-Viewer"
     for name in DOCS:
         _copy(docs / name, root / "docs" / name)
     _copy(repo / "+docs" / "b12_Lean-Input-JQ" / "Pattern-jq.md", root / "docs" / "Pattern-jq.md")
     readme = (
-        f"# lean-input-trafilatura {target} candidate\n\n"
+        f"# scraper-viewer {target} candidate\n\n"
         "This archive is an unmerged candidate snapshot. It is not a stable release and it has no git tag.\n"
         "It is not a git checkout. Do not clone the repository onto the bot computer or the Mac.\n"
         f"Source revision: `{revision}`\n\n"
@@ -89,7 +89,7 @@ def build_tree(repo: Path, target: str, revision: str, out_dir: Path) -> Path:
             raise SystemExit("Refusing to pack .git")
         files[relative] = sha256_file(path)
     candidate = {
-        "name": "lean-input-trafilatura",
+        "name": "scraper-viewer",
         "channel": "candidate",
         "target": target,
         "source_revision": revision,
@@ -135,7 +135,7 @@ def build(repo: Path, revision: str, out_dir: Path):
     if bot_hashes != mac_hashes:
         raise SystemExit("Bot and Mac runtime helpers differ")
     archives = {target: zip_tree(trees[target]) for target in trees}
-    checksums = out_dir / f"lean-input-trafilatura-candidate-{revision[:12]}.checksums.txt"
+    checksums = out_dir / f"scraper-viewer-candidate-{revision[:12]}.checksums.txt"
     lines = [f"source_revision {revision}", f"trafilatura_pin {TRAFILATURA_PIN}", "runtime_helpers_identical true"]
     for name in sorted(bot_hashes):
         lines.append(f"runtime/{name} {bot_hashes[name]}")

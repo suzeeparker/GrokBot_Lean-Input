@@ -1,4 +1,4 @@
-"""Interpret one lean-input-trafilatura request.
+"""Interpret one scraper-viewer request.
 
 The action is the first standalone word: install, uninstall, explain, or do.
 scrape is an alias of do. Any other first word leaves the whole task on the implied do action.
@@ -19,6 +19,7 @@ import sys
 import extract_url
 import install_runtime
 import scrape_options
+from constants import COMPONENT, DEPRECATED_COMPONENT
 from install_runtime import InstallError
 
 ACTIONS = {"install", "uninstall", "explain", "do"}
@@ -38,7 +39,7 @@ def parse_dispatch(text):
     if not current:
         return "do", ""
     token, _, rest = current.partition(" ")
-    if token.casefold() == "lean-input-trafilatura":
+    if token.casefold() in {COMPONENT, DEPRECATED_COMPONENT}:
         current = rest.strip()
         if not current:
             return "do", ""
@@ -83,7 +84,7 @@ def _offer(home, target):
     interpreter = dest["venv"] / "bin" / "python"
     helper = dest["runtime"] / "extract_url.py"
     return (
-        "The lean-input-trafilatura runtime is not installed. Nothing was installed.\n"
+        "The scraper-viewer runtime is not installed. Nothing was installed.\n"
         "Ask the owner to approve install before changing this computer.\n"
         f"Expected interpreter: {interpreter}\n"
         f"Expected helper: {helper}\n"
@@ -151,7 +152,7 @@ def dispatch(message, home, target, source_root=None, source_revision=None, pyth
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Dispatch one lean-input-trafilatura request.")
+    parser = argparse.ArgumentParser(description="Dispatch one scraper-viewer request.")
     parser.add_argument("--message", required=True)
     parser.add_argument("--target", choices=("bot", "mac"), required=True)
     parser.add_argument("--home", required=True)

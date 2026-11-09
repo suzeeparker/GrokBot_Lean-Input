@@ -767,8 +767,11 @@ def error_payload(option, url, message, warnings=None):
     return base
 
 
-def default_stem():
-    return Path.home() / "Tools" / "lean-input" / "output" / f"page-{uuid.uuid4().hex}.json"
+def default_stem(target=None):
+    directory = extract_url.default_output(target).parent
+    if target == "mac":
+        directory.mkdir(parents=True, exist_ok=True)
+    return directory / f"page-{uuid.uuid4().hex}.json"
 
 
 def files_for(stem, options):
@@ -868,7 +871,7 @@ def main(argv=None):
     if parsed.error:
         print(parsed.error, file=sys.stderr)
         return 2
-    stem = Path(args.output).expanduser() if args.output else default_stem()
+    stem = Path(args.output).expanduser() if args.output else default_stem(args.target)
     try:
         code, summary, written = run_selected(
             parsed.options, url, stem, allow_tunnel=args.target == "bot",
@@ -876,6 +879,8 @@ def main(argv=None):
     except OSError as exc:
         print(json.dumps({"status": "error", "error": str(exc)}), file=sys.stderr)
         return 2
+    if args.target == "mac":
+        extract_url.publish_mac_index(written)
     print(summary)
     print(json.dumps({"status": "error" if code else "success", "outputs": written}, ensure_ascii=False))
     return code

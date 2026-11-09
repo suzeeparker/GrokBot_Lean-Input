@@ -1,13 +1,13 @@
 ---
-name: lean-input-trafilatura
-description: "Extract one public page to JSON, or combine scrape page, seo, aeo, and schema, or scrape all. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, scrape, scrape page, scrape seo, scrape aeo, scrape schema, or scrape all. scrape is an alias of do. Plain scrape or do is the page option. Runs in Cursor on this Mac only."
+name: scraper-viewer
+description: "Extract one public page to JSON, or combine scrape page, seo, aeo, and schema, or scrape all. Use when the user invokes scraper-viewer with install, uninstall, explain, do, scrape, scrape page, scrape seo, scrape aeo, scrape schema, or scrape all. scrape is an alias of do. Plain scrape or do is the page option. lean-input-trafilatura is a deprecated alias for one release. Runs in Cursor on this Mac only."
 ---
 
-# lean-input-trafilatura — Cursor on this Mac
+# scraper-viewer — Cursor on this Mac
 
 This skill extracts one ordinary public web page in Cursor on this Mac. It is not a shell command and it does not define a slash command. jq and the other Lean Input tools are not implemented here.
 
-Repository source for this pair is `+skills/b11_lean-input-trafilatura/`. The installed skill name stays `lean-input-trafilatura`.
+Repository source for this pair is `+skills/b11_scraper-viewer/`. The installed skill name stays `scraper-viewer`.
 
 Run only on this Mac. Do not target the Grok Bot computer, do not embed a machine id, and do not assume a shared filesystem, Python, or `PATH` with any other computer. Do not clone this repository onto the Mac. Installed files are a snapshot, not a checkout. Do not turn on Sync Skills for Cloud Agents as part of this install.
 
@@ -15,22 +15,22 @@ Run only on this Mac. Do not target the Grok Bot computer, do not embed a machin
 
 - Virtual environment: `$HOME/Tools/lean-input/.venv/`
 - Interpreter: `$HOME/Tools/lean-input/.venv/bin/python`
-- Helpers: `$HOME/Tools/lean-input/runtime/lean-input-trafilatura/`
-- Cursor skill: `$HOME/.cursor/skills/lean-input-trafilatura/SKILL.md`
-- Manifest: `$HOME/Tools/lean-input/manifests/lean-input-trafilatura.json`
-- Output: `$HOME/Tools/lean-input/output/`
+- Helpers: `$HOME/Tools/lean-input/runtime/scraper-viewer/`
+- Cursor skill: `$HOME/.cursor/skills/scraper-viewer/SKILL.md`
+- Manifest: `$HOME/Tools/lean-input/manifests/scraper-viewer.json`
+- Output: `/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer/` (`SCRAPER_VIEWER_OUTPUT_DIR` overrides it)
 
 Invoke the interpreter by that absolute path. Do not activate the virtual environment and do not call a bare `python` or `trafilatura` from `PATH`.
 
 ## Dispatch
 
-Take the user's text. A leading `#` is optional. A leading token `lean-input-trafilatura` is optional. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, `do`, or `scrape` in any letter case, that is the action and the remainder is the task. `scrape` is an alias of `do`. Plain `scrape <url>` is `scrape page <url>`. You can combine `page`, `seo`, `aeo`, and `schema` before the URL, or use `scrape all <url>`. An unknown option word before the URL is a refusal. The option words must be standalone tokens immediately before the URL. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `scraping` is not the alias. `do install` is a do task, not an install. After dispatch, a word before the URL that is not `page`, `seo`, `aeo`, `schema`, `all`, `output`, or `retain` is refused. `do scrape <url>` is refused. Use `scrape <url>` or `do <url>`.
+Take the user's text. A leading `#` is optional. A leading token `scraper-viewer` is optional. `lean-input-trafilatura` is a deprecated alias of that token for one release. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, `do`, or `scrape` in any letter case, that is the action and the remainder is the task. `scrape` is an alias of `do`. Plain `scrape <url>` is `scrape page <url>`. You can combine `page`, `seo`, `aeo`, and `schema` before the URL, or use `scrape all <url>`. An unknown option word before the URL is a refusal. The option words must be standalone tokens immediately before the URL. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `scraping` is not the alias. `do install` is a do task, not an install. After dispatch, a word before the URL that is not `page`, `seo`, `aeo`, `schema`, `all`, `output`, or `retain` is refused. `do scrape <url>` is refused. Use `scrape <url>` or `do <url>`.
 
 When the helper exists, pass the original user text unchanged:
 
 ```sh
 "$HOME/Tools/lean-input/.venv/bin/python" \
-  "$HOME/Tools/lean-input/runtime/lean-input-trafilatura/actions.py" \
+  "$HOME/Tools/lean-input/runtime/scraper-viewer/actions.py" \
   --target mac \
   --home "$HOME" \
   --message "<original user text>"
@@ -59,10 +59,10 @@ Installing changes this Mac. Show the plan before changing anything.
 4. Read the plan to the owner. It must show files to create, whether the shared virtual environment and Trafilatura will be created or reused, and the Cursor discovery note. Exit 3 means approval is still required. If the plan reports an unmanaged file or an incompatible Trafilatura, stop. Do not overwrite or upgrade it.
 5. After the owner approves that plan, run the same command with `--approve`. Add `--update` only when the owner also approved replacing managed files that differ. `--update` still does not replace unmanaged files and does not upgrade Trafilatura.
 6. A second approved install with the same revision and the same files must change nothing.
-7. Cursor discovers `$HOME/.cursor/skills/lean-input-trafilatura/SKILL.md` from the user skill directory. Ask the owner to open Customize, Skills, and confirm `lean-input-trafilatura` is listed. Do not claim it is active before that. Do not enable Sync Skills for Cloud Agents unless the owner asks for that separately.
+7. Cursor discovers `$HOME/.cursor/skills/scraper-viewer/SKILL.md` from the user skill directory. Ask the owner to open Customize, Skills, and confirm `scraper-viewer` is listed. Do not claim it is active before that. Do not enable Sync Skills for Cloud Agents unless the owner asks for that separately.
 8. Record the manifest's source revision, interpreter path, and Trafilatura version.
 
-Fresh installs request `trafilatura==2.3.1` only. A preexisting 2.x install is reused and left at its version, with a warning when that version is not 2.3.1. Any other major version stops the install. The shared virtual environment at `$HOME/Tools/lean-input/.venv/` is kept for later Lean Input tools. This install does not claim an older virtual environment it did not create.
+The extractor library remains Trafilatura. Fresh installs request `trafilatura==2.3.1` only. A preexisting 2.x install is reused and left at its version, with a warning when that version is not 2.3.1. Any other major version stops the install. The shared virtual environment at `$HOME/Tools/lean-input/.venv/` is kept for later Lean Input tools. This install does not claim an older virtual environment it did not create.
 
 ## uninstall
 
@@ -70,7 +70,7 @@ Run uninstall once without confirmation and show every managed path plus what is
 
 ```sh
 "$HOME/Tools/lean-input/.venv/bin/python" \
-  "$HOME/Tools/lean-input/runtime/lean-input-trafilatura/actions.py" \
+  "$HOME/Tools/lean-input/runtime/scraper-viewer/actions.py" \
   --target mac --home "$HOME" --message "uninstall"
 ```
 
@@ -88,7 +88,7 @@ If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do 
 
 Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 is a fetch or extraction failure, and an error JSON file was written. Exit 2 is a URL refused before any network attempt, and an error JSON file was still written, or an output path that was refused and not overwritten. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
 
-Default output is `$HOME/Tools/lean-input/output/page-<unique>.json`. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
+Default output is `/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer/page-<unique>.json`. The folder is created when it is missing. Page, seo, aeo, schema, and metrics JSON files from one run share that folder. After the run, `d11_files.js` in that folder is rewritten for the viewer. Set `SCRAPER_VIEWER_OUTPUT_DIR` to use a different folder. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
 
 ## Output
 

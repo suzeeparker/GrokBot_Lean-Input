@@ -40,21 +40,21 @@ The checkout recipe is the same install into a fresh virtual environment. The re
 ```sh
 /tmp/lean-tf-venv/bin/python -m unittest discover -s +skills/b00_packaging/tests
 /tmp/lean-tf-venv/bin/python -m unittest discover -s +skills/b10_lean_input/tests
-/tmp/lean-tf-venv/bin/python -m unittest discover -s +skills/b11_lean-input-trafilatura/tests
+/tmp/lean-tf-venv/bin/python -m unittest discover -s +skills/b11_scraper-viewer/tests
 ```
 
 Result after the `+skills` and `+docs` move, Python 3.12.3: 31 tests, OK.
 
 - `+skills/b00_packaging/tests`: 1 test
 - `+skills/b10_lean_input/tests`: 21 tests
-- `+skills/b11_lean-input-trafilatura/tests`: 9 tests The run includes action parsing, read-only explain, a missing-runtime refusal, fixture extraction, Unicode counts, challenge and paywall handling, HTTP failure cases, staged install idempotence, unmanaged-file refusal, incompatible-tool refusal, rollback, a real temporary virtual environment with `trafilatura==2.3.1`, confirmed uninstall that keeps that environment, and candidate archive equality.
+- `+skills/b11_scraper-viewer/tests`: 9 tests The run includes action parsing, read-only explain, a missing-runtime refusal, fixture extraction, Unicode counts, challenge and paywall handling, HTTP failure cases, staged install idempotence, unmanaged-file refusal, incompatible-tool refusal, rollback, a real temporary virtual environment with `trafilatura==2.3.1`, confirmed uninstall that keeps that environment, and candidate archive equality.
 
 ## Live smoke
 
 Command:
 
 ```sh
-/tmp/lean-tf-venv/bin/python +skills/b11_lean-input-trafilatura/tests/live_smoke.py https://example.com/
+/tmp/lean-tf-venv/bin/python +skills/b11_scraper-viewer/tests/live_smoke.py https://example.com/
 ```
 
 Exit 0. Decoded HTML was not printed.

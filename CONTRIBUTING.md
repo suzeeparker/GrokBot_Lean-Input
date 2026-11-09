@@ -24,11 +24,11 @@ This is the repository standard.
 
 - Skills and their code live under `+skills/`. Folder names are lowercase and start with a `b##_` prefix.
 - Docs live under `+docs/`. Folder names are capitalized and start with a `b##_` prefix. Doc file names are capitalized, for example `Acceptance.md`.
-- `b00` is packaging. `b10` is the shared Lean Input code (formerly a10). Tool numbers are `b11` trafilatura, `b12` jq, `b13` ripgrep, `b14` duckdb, `b15` docling, `b16` changedetection.io, `b17` rtk, `b18` tenacity, and `b19` pydantic.
+- `b00` is packaging. `b10` is the shared Lean Input code (formerly a10). Tool numbers are `b11` scraper-viewer (the Trafilatura library), `b12` jq, `b13` ripgrep, `b14` duckdb, `b15` docling, `b16` changedetection.io, `b17` rtk, `b18` tenacity, and `b19` pydantic.
 - A tool skill folder that exists has a `scripts` directory and a `SKILL.md`. Paired bot and Mac instructions live in `bot/SKILL.md` and `cursor/SKILL.md`.
 - Do not add empty placeholder folders for tools that are not implemented yet.
 - Folders whose names contain `+` or `-` are not Python packages. Run scripts by path. Imports add the script directory to `sys.path` from the file's own location.
-- Installed skill names do not use the `b##` prefix. `lean-input-trafilatura` stays that name after install. Mac paths stay `~/.cursor/skills/<skill>/`, `~/Tools/lean-input/.venv/`, `~/.local/bin/`, and `~/Tools/lean-input/output/`. Bot helpers stay under `~/Tools/lean-input-bot/`.
+- Installed skill names do not use the `b##` prefix. `scraper-viewer` stays that name after install. `lean-input-trafilatura` is a deprecated invocation alias for one release. Mac paths stay `~/.cursor/skills/<skill>/`, `~/Tools/lean-input/.venv/`, and `~/.local/bin/`. Mac JSON output goes to `/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer/`. Bot helpers stay under `~/Tools/lean-input-bot/`, and bot JSON output stays `~/Tools/lean-input/output/`.
 
 Planned folder names, created only when that tool has files:
 
@@ -36,7 +36,7 @@ Planned folder names, created only when that tool has files:
 |---|---|---|
 | b00 | `b00_packaging` | |
 | b10 | `b10_lean_input` | `b10_Lean-Input` |
-| b11 | `b11_lean-input-trafilatura` | |
+| b11 | `b11_scraper-viewer` | `B11_Scraper-Viewer` |
 | b12 | `b12_lean-input-jq` | `b12_Lean-Input-JQ` |
 | b13 | `b13_lean-input-ripgrep` | `b13_Lean-Input-RipGrep` |
 | b14 | `b14_lean-input-duck-db` | `b14_Lean-Input-DuckDB` |
@@ -48,7 +48,7 @@ Planned folder names, created only when that tool has files:
 
 ## Lean Input
 
-The Trafilatura slice is documented in `+docs/b10_Lean-Input/`. Do not merge that work until the parent confirms both the Grok Bot app acceptance and the Mac Cursor acceptance. After that confirmation, the coding agent may merge. A separate manual merge by the owner is not required. Linux tests are not those acceptances.
+The scraper-viewer slice is documented in `+docs/B11_Scraper-Viewer/`. The extractor library is Trafilatura. Do not merge that work until the parent confirms both the Grok Bot app acceptance and the Mac Cursor acceptance. After that confirmation, the coding agent may merge. A separate manual merge by the owner is not required. Linux tests are not those acceptances.
 
 Do not clone the repository onto the Grok Bot computer or the Mac. Installed snapshots are not checkouts.
 

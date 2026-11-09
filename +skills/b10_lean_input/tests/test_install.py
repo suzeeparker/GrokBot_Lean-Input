@@ -97,7 +97,7 @@ class InstallTests(unittest.TestCase):
             source = (SCRIPTS / "extract_url.py").read_bytes()
             self.assertEqual(installed.read_bytes(), source)
             skill_text = dest["skill"].read_text(encoding="utf-8")
-            self.assertIn(".cursor/skills/lean-input-trafilatura", skill_text)
+            self.assertIn(".cursor/skills/scraper-viewer", skill_text)
             notes = dest["skill"].parent / "notes.md"
             notes.write_text("unmanaged\n", encoding="utf-8")
             other = home / ".cursor" / "skills" / "other-skill" / "SKILL.md"
@@ -186,7 +186,7 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(
             note,
             "Files under ~/Tools/lean-input-bot are not a registered Grok Bot skill "
-            "until it is saved in the Grok Bot skill library as lean-input-trafilatura; "
+            "until it is saved in the Grok Bot skill library as scraper-viewer; "
             "it is active once the Bot can load it by name.",
         )
         self.assertNotIn("Connect apps", note)

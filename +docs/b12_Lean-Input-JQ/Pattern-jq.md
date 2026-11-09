@@ -6,7 +6,7 @@ This file is the pattern only. `lean-input-jq` is not implemented, and neither a
 
 1. One canonical helper directory in the repository. Bot and Mac skills contain environment instructions, not a second copy of the helper that can drift.
 2. `+skills/b00_packaging/scripts/build_candidates.py` copies that helper into two archives and fails if the helper bytes differ. Archives are not git checkouts.
-3. The installed skill name stays `lean-input-<tool>` with no `b##` prefix. The repository folder uses the prefix (`b11_lean-input-trafilatura`, and later `b12_lean-input-jq`). Frontmatter `name` matches the installed skill name. The description says when to use the skill.
+3. The installed skill name has no `b##` prefix. This tool's installed name is `scraper-viewer`. The repository folder uses the prefix (`b11_scraper-viewer`, and later `b12_lean-input-jq`). Frontmatter `name` matches the installed skill name. The description says when to use the skill.
 4. The skill interprets `install`, `uninstall`, `explain`, and `do`. `do` is the default when the first standalone word is not an action. Parsing lives in one helper.
 5. An onboarding document can install the skill before it is registered. On the bot, save it in the Grok Bot skill library. It is active once the Bot can load it by name, and that library is shared by all of the owner's bots. On the Mac, Cursor discovery is `~/.cursor/skills/<name>/SKILL.md`, confirmed in Customize.
 6. Install checks the interpreter, an existing tool, and file ownership. It reuses a compatible tool, installs a missing pinned tool only inside the approved environment, and does not upgrade or replace otherwise.

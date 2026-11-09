@@ -1,6 +1,6 @@
 # Review of the v1.11 preparation package
 
-The attached package `lean-input-trafilatura-review-v1.11` was inspected and not installed as-is. Its own `CHECKS.md` says no virtual environment, no Trafilatura import, no live fetch, and no Mac run. The stdlib unit tests it reported do not certify extraction.
+The attached package `scraper-viewer-review-v1.11` was inspected and not installed as-is. Its own `CHECKS.md` says no virtual environment, no Trafilatura import, no live fetch, and no Mac run. The stdlib unit tests it reported do not certify extraction.
 
 Checked against current sources on 2026-11-08:
 
@@ -29,7 +29,7 @@ Checked against current sources on 2026-11-08:
 - HTML and text lengths lived in the result JSON. They were not a self-count, but the contract the owner asked for is the sidecar. All three measurements are in the sidecar. The result JSON is the extraction record.
 - `value or None` collapses every falsy metadata value. Strings are stripped, and a non-string is omitted with a warning instead of being stringified.
 - Challenge pages were only a standing warning. Short challenge text is now an error and is not returned as the article. Paywall language stays in the text and adds a warning. Nothing is bypassed.
-- The user agent advertised preparation version 1.11. The helper now identifies `lean-input-trafilatura/candidate` and does not pretend to be a browser.
+- The user agent advertised preparation version 1.11. The helper now identifies `scraper-viewer/candidate` and does not pretend to be a browser.
 - Integration tests were present and unrun. They are run here against 2.3.1. A Linux freeze of transitive wheels is recorded as evidence, not as a Mac lock. `charset_normalizer`, `lxml`, and `regex` publish platform wheels.
 - The package is not vendored into this repository.
 
