@@ -1,6 +1,6 @@
 ---
 name: lean-input-trafilatura
-description: "Extract the main text and metadata of one public HTTP or HTTPS page into UTF-8 JSON and a character-count sidecar. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, or scrape, or says scrape and a public URL. scrape is an alias of do. The do action is implied when no action word is given. Runs on the Grok Bot computer only. Copying this file does not register the skill."
+description: "Extract one public page to JSON, or combine scrape page, seo, aeo, and schema, or scrape all. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, scrape, scrape page, scrape seo, scrape aeo, scrape schema, or scrape all. scrape is an alias of do. Plain scrape or do is the page option. Runs on the Grok Bot computer only. Copying this file does not register the skill."
 ---
 
 # lean-input-trafilatura — Grok Bot computer
@@ -25,7 +25,7 @@ Invoke the interpreter by that absolute path. Do not activate the virtual enviro
 
 ## Dispatch
 
-Take the user's text. A leading `#` is optional. A leading token `lean-input-trafilatura` is optional. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, `do`, or `scrape` in any letter case, that is the action and the remainder is the task. `scrape` is an alias of `do` and follows the same rules. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `do scrape https://example.com/` is a do task whose text starts with scrape. `scraping` is not the alias. `do install` is a do task, not an install.
+Take the user's text. A leading `#` is optional. A leading token `lean-input-trafilatura` is optional. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, `do`, or `scrape` in any letter case, that is the action and the remainder is the task. `scrape` is an alias of `do`. Plain `scrape <url>` is `scrape page <url>`. You can combine `page`, `seo`, `aeo`, and `schema` before the URL, or use `scrape all <url>`. An unknown option word before the URL is a refusal. The option words must be standalone tokens immediately before the URL. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `scraping` is not the alias. `do install` is a do task, not an install. After dispatch, a word before the URL that is not `page`, `seo`, `aeo`, `schema`, `all`, `output`, or `retain` is refused. `do scrape <url>` is refused. Use `scrape <url>` or `do <url>`.
 
 When the helper exists, pass the original user text unchanged:
 
@@ -87,7 +87,7 @@ A public `http` or `https` URL is required. An output path is optional (`output 
 
 If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do not install in the same turn.
 
-`scrape <url>` is the same extraction as `do`. Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 is a fetch or extraction failure, and an error JSON file was written. Exit 2 is a URL refused before any network attempt, and an error JSON file was still written, or an output path that was refused and not overwritten. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
+A public HTTP or HTTPS URL is required. `scrape <url>` and `do <url>` are `scrape page <url>`. The page JSON schema is unchanged. `scrape seo`, `scrape aeo`, and `scrape schema` can be combined with `page` or with each other. `scrape all <url>` runs all four. One run fetches the page once, and fetches robots.txt, one sitemap, and llms.txt at most once. It writes one file per option on the same stem, plus a metrics sidecar. A missing seo, aeo, or schema element is the string `not found`. Run the URL only as an argument to the helper. Never interpolate it into a shell string. Exit 0 means the selected reports were written. Exit 1 is a fetch failure. Exit 2 is an unknown option, a URL refused before any fetch, or an output path that was refused. Nothing is fetched for an unknown option. On success, always show the printed summary in chat, including every saved path. Do not paste raw HTML or raw robots.txt. aeo is a deterministic checklist, not a model. At most five fetches, same-origin only, with the same address and size limits as page extraction.
 
 Default output is `$HOME/Tools/lean-input/output/page-<unique>.json`. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
 

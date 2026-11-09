@@ -277,6 +277,136 @@ def fetch_html(url, allow_tunnel=False):
     raise ValueError("Redirect limit exceeded")
 
 
+def origin_of(url):
+    """Return ``(scheme, ascii_host, port)`` for a URL that already validates."""
+    parts, host = validate_url(url)
+    port = parts.port or (443 if parts.scheme == "https" else 80)
+    return parts.scheme, host.lower(), port
+
+
+def fetch_resource(url, allow_tunnel=False, require_html=False, lock_origin=None):
+    """Fetch one URL with the same address, size, time, and redirect limits.
+
+    HTTP errors are returned. Safety failures still raise ``ValueError``.
+    ``lock_origin`` rejects a start URL or redirect that leaves that origin.
+    """
+    current = url
+    used_tunnel = False
+    warnings = []
+    for hop in range(MAX_REDIRECTS + 1):
+        if lock_origin is not None and origin_of(current) != tuple(lock_origin):
+            raise ValueError("URL is not on the page origin")
+        parts, host = validate_url(current)
+        port = 443 if parts.scheme == "https" else 80
+        addresses = public_addresses(host, port, allow_tunnel=allow_tunnel)
+        if resolved_uses_tunnel(addresses):
+            used_tunnel = True
+        family, socktype, proto, _canon, sockaddr = addresses[0]
+        raw_sock = socket.socket(family, socktype, proto)
+        raw_sock.settimeout(SOCKET_TIMEOUT_SECONDS)
+        conn = None
+        try:
+            raw_sock.connect(sockaddr)
+            if parts.scheme == "https":
+                sock = ssl.create_default_context().wrap_socket(raw_sock, server_hostname=host)
+            else:
+                sock = raw_sock
+            conn = http.client.HTTPConnection(host, port, timeout=SOCKET_TIMEOUT_SECONDS)
+            conn.sock = sock
+            target = urlunsplit(("", "", parts.path or "/", parts.query, ""))
+            host_header = f"[{host}]" if ":" in host else host
+            accept = "text/html, application/xhtml+xml" if require_html else "text/plain, text/html, application/xml, text/xml, */*;q=0.1"
+            conn.request(
+                "GET",
+                target,
+                headers={
+                    "Host": host_header,
+                    "User-Agent": USER_AGENT,
+                    "Accept": accept,
+                    "Accept-Encoding": "identity",
+                    "Connection": "close",
+                },
+            )
+            response = conn.getresponse()
+            if response.status in REDIRECT_STATUSES:
+                location = response.getheader("Location")
+                response.close()
+                if hop == MAX_REDIRECTS:
+                    raise ValueError("Redirect limit exceeded")
+                current = next_hop(current, location, parts.scheme)
+                continue
+            if not 200 <= response.status < 300:
+                response.close()
+                if used_tunnel:
+                    warnings.append(TUNNEL_WARNING)
+                return {
+                    "ok": False,
+                    "final_url": current,
+                    "http_status": response.status,
+                    "text": "",
+                    "content_type": response.headers.get_content_type() or "",
+                    "warnings": warnings,
+                    "error": f"HTTP status {response.status}",
+                }
+            text, body_warnings = read_body(response, require_html=require_html)
+            warnings.extend(body_warnings)
+            response.close()
+            if used_tunnel:
+                warnings.insert(0, TUNNEL_WARNING)
+            return {
+                "ok": True,
+                "final_url": current,
+                "http_status": response.status,
+                "text": text,
+                "content_type": response.headers.get_content_type() or "",
+                "warnings": warnings,
+                "error": None,
+            }
+        except socket.timeout as exc:
+            raise TimeoutError("Timed out after 10 seconds waiting for the server") from exc
+        finally:
+            if conn is not None:
+                conn.close()
+            else:
+                raw_sock.close()
+    raise ValueError("Redirect limit exceeded")
+
+
+def read_body(response, require_html=True):
+    content_type = response.headers.get_content_type()
+    if require_html and content_type not in HTML_TYPES:
+        shown = content_type or "missing"
+        raise ValueError(f"Response is not HTML (content type {shown})")
+    if not require_html and content_type:
+        allowed = content_type in HTML_TYPES or content_type in {
+            "text/plain", "text/xml", "application/xml", "application/json", "application/octet-stream",
+        } or content_type.startswith("text/")
+        if not allowed:
+            raise ValueError(f"Response is not text (content type {content_type})")
+    encoding = response.getheader("Content-Encoding")
+    if encoding and encoding.lower() != "identity":
+        raise ValueError("Compressed response rejected")
+    length_header = response.getheader("Content-Length")
+    if length_header is not None:
+        try:
+            announced = int(length_header)
+        except ValueError as exc:
+            raise ValueError("Invalid Content-Length") from exc
+        if announced > MAX_BYTES:
+            raise ValueError("Response exceeds 5 MiB limit")
+    raw = response.read(MAX_BYTES + 1)
+    if len(raw) > MAX_BYTES:
+        raise ValueError("Response exceeds 5 MiB limit")
+    charset = response.headers.get_content_charset() or "utf-8"
+    warnings = []
+    try:
+        text = raw.decode(charset, errors="strict")
+    except (LookupError, UnicodeDecodeError):
+        text = raw.decode("utf-8", errors="replace")
+        warnings.append("Encoding was uncertain; decoded as UTF-8 with replacement characters")
+    return text, warnings
+
+
 def _clean_meta(value, field):
     if value is None:
         return None, None

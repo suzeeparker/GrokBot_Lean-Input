@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 import install_runtime
+import scrape_options
 from install_runtime import InstallError
 
 ACTIONS = {"install", "uninstall", "explain", "do"}
@@ -79,22 +80,26 @@ def _offer(home, target):
 
 
 def perform_do(task, home, target):
-    urls, output, retain = parse_task(task)
+    parsed = scrape_options.parse_options(task)
+    if parsed.error:
+        sys.stdout.write(parsed.error + "\n")
+        return 2
+    urls, output, retain = parse_task(parsed.task)
+    if not urls:
+        sys.stdout.write("A public HTTP or HTTPS URL is required. Nothing was fetched.\n")
+        return 2
     dest = install_runtime.destinations(home, target)
-    helper = dest["runtime"] / "extract_url.py"
+    helper = dest["runtime"] / "scrape_options.py"
     python = dest["venv"] / "bin" / "python"
     if not helper.is_file() or not os.access(python, os.X_OK):
         sys.stdout.write(_offer(home, target))
         return 10
-    if not urls:
-        sys.stdout.write("A public HTTP or HTTPS URL is required. Nothing was fetched.\n")
-        return 2
     if len(urls) > 1:
         sys.stdout.write("More than one URL was present. Only the first URL is extracted.\n")
-    command = [str(python), str(helper), urls[0], "--target", target]
+    command = [str(python), str(helper), *parsed.options, urls[0], "--target", target]
     if output:
         command.extend(["--output", output])
-    if retain:
+    if retain and parsed.options == ["page"]:
         command.append("--retain-html")
     completed = subprocess.run(command, check=False)
     return completed.returncode

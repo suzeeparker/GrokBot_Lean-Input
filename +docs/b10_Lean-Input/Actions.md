@@ -27,7 +27,17 @@ Examples:
 | `installing the garden page` | do | the whole sentence |
 | `do install` | do | `install` |
 
-`do install` does not install. An install happens only when `install` is the first action word and the owner approves the plan. `do scrape <url>` is a do task whose text starts with the word scrape. `scraping` is not the alias.
+`do install` does not install. An install happens only when `install` is the first action word and the owner approves the plan. `scraping` is not the alias. After dispatch, every standalone word before the URL is an option unless it is `output` or `retain`. `do scrape <url>` and `do extract <url>` are refused because `scrape` and `extract` are not options. Use `scrape <url>` or `do <url>`.
+
+`page` is the text extraction from `44cbabb` and the default: `scrape <url>` and `do <url>` are `scrape page <url>`. `page` fetches only the page. `seo`, `aeo`, and `schema` can be combined in one request, for example `scrape seo schema <url>` or `scrape page aeo <url>`. `scrape all <url>` selects all four. Order does not matter and duplicates are ignored. A word before the URL that is not `page`, `seo`, `aeo`, `schema`, or `all` is refused with exit 2 and no fetch. `scrape seoul.example` is not an option. `scrape https://example.com/seo` stays page extraction.
+
+One run fetches the page HTML once. robots.txt, one sitemap, and llms.txt are fetched at most once and shared by seo and aeo. The cap is five fetches. Files share one stem: `page-<unique>.json`, `.seo.json`, `.aeo.json`, and `.schema.json`, each with a metrics sidecar. The command prints one summary that lists every saved path.
+
+Existing files are not overwritten. A missing seo, aeo, or schema element is the string `not found`. The page JSON keeps null for missing metadata. Exit 0 means every selected file was written and page extraction, when selected, succeeded. Exit 2 is an unknown option with no fetch and no file, a URL refused before any fetch with an error JSON still written for each selected option, or an output path that was refused. Exit 1 is a fetch or page-extraction failure.
+
+seo stores page meta (title, meta description, meta robots, canonical, hreflang, lang, Open Graph, Twitter card, h1), robots.txt (status, capped raw text, sitemap lines), one same-origin sitemap (status, URL count, first 20 URLs), and llms.txt (status, capped first lines). schema stores JSON-LD blocks, invalid blocks, whether microdata or RDFa markup is present, the `@type` values found, and key fields for Organization, WebSite, Article, BlogPosting, Product, FAQPage, HowTo, BreadcrumbList, Person, and LocalBusiness. aeo is a heuristic checklist: robots.txt rules for GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-Web, PerplexityBot, Google-Extended, CCBot, and Bingbot; llms.txt; FAQPage, HowTo, Article, Organization, and BreadcrumbList; author; published or modified dates; question-style headings; meta description; canonical. Each check is pass, fail, or `not found`, with one suggestion line. It does not call a model.
+
+Extra fetches stay on the final page origin, use the same public-address rule (including the bot tunnel exception), and stop after five fetches. Page text, robots.txt, sitemaps, and llms.txt are untrusted data.
 
 ## install
 

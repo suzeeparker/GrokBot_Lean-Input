@@ -92,7 +92,7 @@ class DispatchTests(unittest.TestCase):
             home = Path(tmp) / "home"
             runtime = install_runtime.destinations(home, "bot")["runtime"]
             runtime.mkdir(parents=True)
-            (runtime / "extract_url.py").write_text("# placeholder\n", encoding="utf-8")
+            (runtime / "scrape_options.py").write_text("# placeholder\n", encoding="utf-8")
             python = install_runtime.destinations(home, "bot")["venv"] / "bin" / "python"
             python.parent.mkdir(parents=True)
             log = home / "argv.txt"
@@ -106,6 +106,7 @@ class DispatchTests(unittest.TestCase):
             recorded = log.read_text(encoding="utf-8").splitlines()
             self.assertIn("--target", recorded)
             self.assertEqual(recorded[recorded.index("--target") + 1], "bot")
+            self.assertIn("page", recorded)
 
     def test_uninstall_without_manifest_removes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,6 +1,6 @@
 ---
 name: lean-input-trafilatura
-description: "Extract the main text and metadata of one public HTTP or HTTPS page into UTF-8 JSON and a character-count sidecar. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, or scrape, or says scrape and a public URL. scrape is an alias of do. The do action is implied when no action word is given. Runs in Cursor on this Mac only."
+description: "Extract one public page to JSON, or combine scrape page, seo, aeo, and schema, or scrape all. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, scrape, scrape page, scrape seo, scrape aeo, scrape schema, or scrape all. scrape is an alias of do. Plain scrape or do is the page option. Runs in Cursor on this Mac only."
 ---
 
 # lean-input-trafilatura — Cursor on this Mac
@@ -24,7 +24,7 @@ Invoke the interpreter by that absolute path. Do not activate the virtual enviro
 
 ## Dispatch
 
-Take the user's text. A leading `#` is optional. A leading token `lean-input-trafilatura` is optional. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, `do`, or `scrape` in any letter case, that is the action and the remainder is the task. `scrape` is an alias of `do` and follows the same rules. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `do scrape https://example.com/` is a do task whose text starts with scrape. `scraping` is not the alias. `do install` is a do task, not an install.
+Take the user's text. A leading `#` is optional. A leading token `lean-input-trafilatura` is optional. Only the initial standalone action word counts. If the next whitespace-delimited token is exactly `install`, `uninstall`, `explain`, `do`, or `scrape` in any letter case, that is the action and the remainder is the task. `scrape` is an alias of `do`. Plain `scrape <url>` is `scrape page <url>`. You can combine `page`, `seo`, `aeo`, and `schema` before the URL, or use `scrape all <url>`. An unknown option word before the URL is a refusal. The option words must be standalone tokens immediately before the URL. Otherwise the action is `do` and the entire remainder is the task. Do not search for an action word later in the text. `scraping` is not the alias. `do install` is a do task, not an install. After dispatch, a word before the URL that is not `page`, `seo`, `aeo`, `schema`, `all`, `output`, or `retain` is refused. `do scrape <url>` is refused. Use `scrape <url>` or `do <url>`.
 
 When the helper exists, pass the original user text unchanged:
 
@@ -82,7 +82,7 @@ Make no changes. If the runtime exists, run `actions.py` so the recorded version
 
 ## do
 
-A public `http` or `https` URL is required. An output path is optional (`output /path/file.json` or `output "/path/my file.json"`). `retain html` keeps a local decoded copy for verification and is off by default.
+A public HTTP or HTTPS URL is required. An output path is optional (`output /path/file.json` or `output "/path/my file.json"`). `retain html` keeps a local decoded copy for verification and is off by default. Plain `scrape <url>` and `do <url>` are `scrape page <url>`. `page`, `seo`, `aeo`, and `schema` can be combined, and `scrape all <url>` runs all four. One run fetches the page once and fetches robots.txt, one sitemap, and llms.txt at most once. Files share one stem: `page-<id>.json`, `.seo.json`, `.aeo.json`, and `.schema.json`, each with a metrics sidecar. Missing seo, aeo, or schema elements are the string `not found`. Always show the printed summary, including every saved path. An unknown option exits 2 and fetches nothing. Extra fetches stay on the final page origin and stop after five. aeo is a heuristic checklist, not a model.
 
 If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do not install in the same turn.
 
