@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scraper Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --text:#e6e8ee; --dim:#9aa3b2;
+          --key:#7cc4ff; --str:#a5e28c; --num:#f5c26b; --nul:#c792ea; --bad:#ff6b6b; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f6f7f9; --panel:#fff; --line:#dfe3ea; --text:#1d2330; --dim:#5d6676;
+            --key:#0b62b5; --str:#2f7d1e; --num:#a35d00; --nul:#7b3fb0; --bad:#c62828; } }
+  * { box-sizing:border-box }
+  body { margin:0; font:14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text) }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:center; flex-wrap:wrap }
+  h1 { font-size:18px; margin:0 12px 0 0 }
+  label { color:var(--dim); font-size:12px; display:flex; flex-direction:column; gap:4px }
+  select, button { font:inherit; padding:6px 10px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text) }
+  select { min-width:260px }
+  button { cursor:pointer }
+  main { padding:16px 20px }
+  .props { color:var(--dim); font-size:12px; margin-bottom:10px; word-break:break-all }
+  pre { margin:0; padding:16px; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+        overflow:auto; font:12.5px/1.5 ui-monospace, Menlo, monospace; white-space:pre-wrap; word-break:break-word }
+  .k{color:var(--key)} .s{color:var(--str)} .n{color:var(--num)} .z{color:var(--nul)} .bad{color:var(--bad);font-weight:600}
+  .empty { color:var(--dim); padding:40px; text-align:center; border:2px dashed var(--line); border-radius:8px }
+  .drop { outline:3px dashed var(--key); outline-offset:-8px }
+</style>
+<!-- Optional list built by c11_build-files.mjs; loads with a script tag so it works when opened as a file -->
+<script src="../../../+data/DBMSs/JSONs/d11_scraper-viewer/d11_files.js"></script>
+</head>
+<body>
+<header>
+  <h1>Scraper Viewer</h1>
+  <label>Run <select id="run"></select></label>
+  <label>File <select id="file"></select></label>
+  <button id="pick" title="Choose the d11_scraper-viewer folder">Open folder…</button>
+  <input id="dir" type="file" webkitdirectory multiple hidden>
+</header>
+<main>
+  <div class="props" id="props"></div>
+  <div id="out"></div>
+</main>
+<script>
+const DATA_DIR = '../../../+data/DBMSs/JSONs/d11_scraper-viewer';
+let files = [];   // {name, mtime, size, data}
+let runs = [];    // {stem, label, mtime, files:[...]}
+
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const fmtSize = n => n < 1024 ? n + ' B' : (n/1024).toFixed(1) + ' KB';
+const fmtTime = t => new Date(t).toLocaleString([], {dateStyle:'medium', timeStyle:'short'});
+
+function stemOf(name) {
+  // page-<id>.json, page-<id>.seo.json, page-<id>.seo.metrics.json -> page-<id>
+  return name.replace(/\.json$/i, '').split('.')[0];
+}
+function kindOf(name) {
+  const parts = name.replace(/\.json$/i, '').split('.').slice(1);
+  return parts.length ? parts.join(' ') : 'page';
+}
+const ORDER = ['page','seo','aeo','schema'];
+function rank(name) {
+  const k = kindOf(name).split(' ');
+  return ORDER.indexOf(k[0] === 'metrics' ? 'page' : k[0]) * 2 + (k.includes('metrics') ? 1 : 0);
+}
+
+function highlight(v, ind = '') {
+  const pad = ind + '  ';
+  if (v === null) return '<span class="z">null</span>';
+  if (typeof v === 'string') {
+    const cls = /^not found$/i.test(v) ? 'bad' : 's';
+    return `<span class="${cls}">"${esc(v)}"</span>`;
+  }
+  if (typeof v === 'number') return `<span class="n">${v}</span>`;
+  if (typeof v === 'boolean') return `<span class="z">${v}</span>`;
+  if (Array.isArray(v)) {
+    if (!v.length) return '[]';
+    return '[\n' + v.map(x => pad + highlight(x, pad)).join(',\n') + '\n' + ind + ']';
+  }
+  const keys = Object.keys(v);
+  if (!keys.length) return '{}';
+  return '{\n' + keys.map(k => `${pad}<span class="k">"${esc(k)}"</span>: ${highlight(v[k], pad)}`).join(',\n') + '\n' + ind + '}';
+}
+
+function buildRuns() {
+  const by = {};
+  for (const f of files) (by[stemOf(f.name)] ||= []).push(f);
+  runs = Object.entries(by).map(([stem, fs]) => {
+    fs.sort((a, b) => rank(a.name) - rank(b.name));
+    const main = fs.find(f => kindOf(f.name) === 'page') || fs.find(f => !/metrics/.test(f.name)) || fs[0];
+    let host = stem;
+    try { host = new URL(main.data.requested_url || main.data.final_url).hostname; } catch (e) {}
+    const mtime = Math.max(...fs.map(f => f.mtime || 0));
+    const kinds = fs.filter(f => !/metrics/.test(f.name)).map(f => kindOf(f.name)).join(', ');
+    return { stem, mtime, files: fs, label: `${host} (${kinds}) ${mtime ? '· ' + fmtTime(mtime) : ''}` };
+  }).sort((a, b) => b.mtime - a.mtime);   // newest first
+}
+
+const $run = document.getElementById('run'), $file = document.getElementById('file');
+const $out = document.getElementById('out'), $props = document.getElementById('props');
+
+function render() {
+  buildRuns();
+  $run.innerHTML = runs.map((r, i) => `<option value="${i}">${esc(r.label)}</option>`).join('');
+  if (!runs.length) {
+    $file.innerHTML = ''; $props.textContent = '';
+    $out.innerHTML = `<div class="empty">No scrape files loaded.<br><br>Click <b>Open folder…</b> and choose<br><code>${esc(DATA_DIR)}</code><br>or drop JSON files here.</div>`;
+    return;
+  }
+  showRun();
+}
+function showRun() {
+  const r = runs[+$run.value || 0];
+  $file.innerHTML = r.files.map((f, i) => `<option value="${i}">${esc(f.name)}</option>`).join('');
+  showFile();
+}
+function showFile() {
+  const r = runs[+$run.value || 0], f = r.files[+$file.value || 0];
+  $props.textContent = `${DATA_DIR}/${f.name} · ${fmtSize(f.size)}${f.mtime ? ' · ' + fmtTime(f.mtime) : ''}`;
+  $out.innerHTML = `<pre>${highlight(f.data)}</pre>`;
+}
+$run.onchange = showRun;
+$file.onchange = showFile;
+
+async function loadFileList(list) {
+  const out = [];
+  for (const f of list) {
+    if (!/\.json$/i.test(f.name)) continue;
+    try { const text = await f.text(); out.push({ name: f.name, mtime: f.lastModified, size: f.size, data: JSON.parse(text) }); }
+    catch (e) { out.push({ name: f.name, mtime: f.lastModified, size: f.size, data: { error: 'Could not parse JSON: ' + e.message } }); }
+  }
+  files = out; render();
+}
+document.getElementById('pick').onclick = () => document.getElementById('dir').click();
+document.getElementById('dir').onchange = e => loadFileList([...e.target.files]);
+document.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('drop'); });
+document.addEventListener('dragleave', () => document.body.classList.remove('drop'));
+document.addEventListener('drop', e => { e.preventDefault(); document.body.classList.remove('drop'); loadFileList([...e.dataTransfer.files]); });
+
+files = Array.isArray(window.D11_FILES) ? window.D11_FILES : [];
+render();
+</script>
+</body>
+</html>

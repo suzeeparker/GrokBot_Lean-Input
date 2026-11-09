@@ -8,3 +8,7 @@ yarn.lock
 *_t[0-9]*
 commit.no
 test-results
+__pycache__/
+*.py[cod]
+.venv/
+venv/
