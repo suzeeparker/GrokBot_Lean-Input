@@ -18,7 +18,7 @@ Use the archive whose name contains `bot` only on the Grok Bot computer, and the
 
 ## 2. Choose the base interpreter
 
-Ask for the absolute path of Python 3.10 or newer. On the machine, a version check is:
+Ask for the absolute path of Python 3.10 or newer. Do not assume `/usr/bin/python3`. On macOS that path is often Apple's Command Line Tools Python 3.9, and the installer refuses it. An existing `$HOME/Tools/lean-input/.venv/bin/python` or `$HOME/Tools/lean-input-bot/.venv/bin/python` is acceptable when it passes the check. On the machine, a version check is:
 
 ```sh
 "$BASE_PYTHON" -c 'import sys,ssl,venv; assert sys.version_info >= (3, 10); print(sys.executable); print(ssl.OPENSSL_VERSION)'

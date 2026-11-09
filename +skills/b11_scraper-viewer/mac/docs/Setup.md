@@ -53,6 +53,8 @@ python3 +skills/b00_packaging/scripts/build_candidates.py --revision "$(git rev-
 
 ## Approved install test on a target computer
 
+Do not pass `/usr/bin/python3` unless it is Python 3.10 or newer. On macOS it is often Apple's 3.9 Command Line Tools and the installer refuses it. The interpreter running a supported virtual environment is acceptable.
+
 The candidate archive includes `tests/` and `fixtures/`. Install copies them into the skill folder and records them in the manifest. They are removed on uninstall only when the checksum still matches. The virtual environment stays outside the skill and is not in the archive.
 
 From the installed skill folder, using the interpreter recorded in the manifest:

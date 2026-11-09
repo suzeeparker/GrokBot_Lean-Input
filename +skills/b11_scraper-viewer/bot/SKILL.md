@@ -46,7 +46,7 @@ If that helper is missing, this skill is in context but the runtime is not insta
 Installing changes this computer. Show the plan before changing anything.
 
 1. Use the unpacked candidate directory (it has `scripts/install_runtime.py`, `SKILL.md`, and `CANDIDATE.json`) or, only in a development checkout, `+skills/b11_scraper-viewer/bot`. Do not clone the repository onto this computer as the install. The skill folder does not contain a virtual environment.
-2. Choose the absolute path of a Python 3.10 or newer interpreter with `venv` and `ssl`. Pass that absolute path. Do not install Homebrew, a compiler, or a system package automatically.
+2. Choose the absolute path of a Python 3.10 or newer interpreter with `venv` and `ssl`. Pass that absolute path. Do not assume `/usr/bin/python3`. Python below 3.10 is refused. `$HOME/Tools/lean-input-bot/.venv/bin/python` is acceptable when it is 3.10 or newer. If a suitable interpreter is missing, stop. Do not install Homebrew, a compiler, or a system package automatically.
 3. Run the plan with the base interpreter, not with the virtual environment, and without `--approve`:
 
 ```sh

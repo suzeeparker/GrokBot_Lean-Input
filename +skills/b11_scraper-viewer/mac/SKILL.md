@@ -45,7 +45,7 @@ If that helper is missing, this skill text may already be on disk while the runt
 Installing changes this Mac. Show the plan before changing anything.
 
 1. Use the unpacked candidate directory (it has `scripts/install_runtime.py`, `SKILL.md`, and `CANDIDATE.json`). Do not clone the repository onto the Mac. The skill folder does not contain a virtual environment. Cursor discovers `$HOME/.cursor/skills/scraper-viewer/`. Other macOS agents can run the scripts in that same folder.
-2. Choose the absolute path of a Python 3.10 or newer interpreter with `venv` and `ssl`. Pass that absolute path. If it is missing, stop. Do not install Homebrew, a compiler, or a system package automatically.
+2. Choose the absolute path of a Python 3.10 or newer interpreter with `venv` and `ssl`. Pass that absolute path. Do not assume `/usr/bin/python3`; on macOS that is often Apple's 3.9 Command Line Tools and is refused. `$HOME/Tools/lean-input/.venv/bin/python` is acceptable when it is 3.10 or newer. If a suitable interpreter is missing, stop. Do not install Homebrew, a compiler, or a system package automatically.
 3. Run the plan with the base interpreter and without `--approve`:
 
 ```sh

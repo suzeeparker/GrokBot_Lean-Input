@@ -336,6 +336,24 @@ def probe_python(executable):
     return True, version, detail
 
 
+def select_base_python(candidates):
+    """Return the first candidate that passes ``probe_python``.
+
+    Python below 3.10 is refused. ``/usr/bin/python3`` is not assumed,
+    because on macOS that path is often Apple's 3.9 Command Line Tools.
+    """
+    for candidate in candidates:
+        if not isinstance(candidate, (str, Path)):
+            continue
+        text = str(candidate).strip()
+        if not text:
+            continue
+        ok, _version, _detail = probe_python(text)
+        if ok:
+            return text
+    return None
+
+
 def probe_trafilatura(venv_python):
     script = "import trafilatura\nprint(trafilatura.__version__)\n"
     try:
