@@ -57,7 +57,7 @@ class ContractTests(unittest.TestCase):
         self.assertIn("active once the Bot can load it by name", bot)
         self.assertIn("shared by all of the owner's bots", bot)
         self.assertNotIn("Connect apps", bot)
-        self.assertIn("/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer", mac)
+        self.assertIn("/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer", mac)
         self.assertIn("d11_files.js", mac)
         self.assertIn("$HOME/Tools/lean-input/.venv/bin/python", mac)
         self.assertIn("$HOME/.cursor/skills/scraper-viewer", mac)

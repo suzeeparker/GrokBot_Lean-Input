@@ -20,9 +20,9 @@ Optional extras (`trafilatura[all]`, language detection, pycurl) are out of scop
 | Helpers | `$HOME/Tools/lean-input-bot/runtime/scraper-viewer/` | `$HOME/Tools/lean-input/runtime/scraper-viewer/` |
 | Skill | Host skill library, plus an unregistered text copy under `skill-source/` | `$HOME/.cursor/skills/scraper-viewer/SKILL.md` |
 | Manifest | `$HOME/Tools/lean-input-bot/manifests/scraper-viewer.json` | `$HOME/Tools/lean-input/manifests/scraper-viewer.json` |
-| Output | `$HOME/Tools/lean-input/output/` | `/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer/` |
+| Output | `$HOME/Tools/lean-input/output/` | `/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer/` |
 
-The output directory is created on the first extraction, not by the installer, and is not removed on uninstall. The Mac path is the output setting. `SCRAPER_VIEWER_OUTPUT_DIR` overrides it. A Mac run rewrites `d11_files.js` in that folder. The extractor library remains Trafilatura.
+The output directory is created on the first extraction, not by the installer, and is not removed on uninstall. The Mac path is outside the lean-input repo (`/Users/Shared/Repos/GrokBot_/lean-input`). `SCRAPER_VIEWER_OUTPUT_DIR` overrides it. A Mac run rewrites `d11_files.js` in that folder. The extractor library remains Trafilatura.
 
 The Grok Bot computer may resolve every public name to 198.18.0.0/15 and forward it through `SAND_EGRESS_TUNNEL_PROXY_ADDR`. Extraction allows that resolved range only for `--target bot` while the variable is set. The Mac target does not. A URL that already contains a 198.18 address is refused on both.
 

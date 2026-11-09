@@ -22,7 +22,7 @@ Installed snapshots are not git checkouts. Do not clone the repository onto eith
 
 - [ ] The Mac candidate archive was transferred without a git clone, and its `source_revision` was recorded separately from the bot.
 - [ ] The onboarding plan was shown and approved before files changed.
-- [ ] Python is `$HOME/Tools/lean-input/.venv/bin/python`. Helpers are `$HOME/Tools/lean-input/runtime/scraper-viewer/`. Output is `/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer/`, and `d11_files.js` there lists the JSON files.
+- [ ] Python is `$HOME/Tools/lean-input/.venv/bin/python`. Helpers are `$HOME/Tools/lean-input/runtime/scraper-viewer/`. Output is `/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer/`, and `d11_files.js` there lists the JSON files.
 - [ ] Customize, Skills, lists `scraper-viewer`. Sync Skills for Cloud Agents was not enabled unless the owner asked.
 - [ ] `explain` is read-only and names the Mac paths, not the bot paths.
 - [ ] A public URL extraction writes JSON and a sidecar. Counts are measured. Raw HTML is not pasted into chat.

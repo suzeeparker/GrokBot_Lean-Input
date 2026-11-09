@@ -1,4 +1,4 @@
-// Rebuilds ../+data/DBMSs/JSONs/d11_scraper-viewer/d11_files.js so index.html
+// Rebuilds ../../../+data/DBMSs/JSONs/d11_scraper-viewer/d11_files.js so index.html
 // lists every JSON file in that folder when opened straight from Finder.
 // Run: node c11_build-files.mjs
 import fs from 'node:fs';
@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const dir  = path.resolve(here, '../+data/DBMSs/JSONs/d11_scraper-viewer');
+const dir  = path.resolve(here, '../../../+data/DBMSs/JSONs/d11_scraper-viewer');
 fs.mkdirSync(dir, { recursive: true });
 
 const files = fs.readdirSync(dir).filter(n => n.toLowerCase().endsWith('.json')).map(name => {

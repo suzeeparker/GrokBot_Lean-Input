@@ -21,7 +21,7 @@ class OutputDirectoryTests(unittest.TestCase):
     def test_mac_default_and_bot_home(self):
         self.assertEqual(
             constants.MAC_OUTPUT_DIR,
-            "/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer",
+            "/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer",
         )
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp) / "home"

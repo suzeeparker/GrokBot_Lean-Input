@@ -13,7 +13,7 @@ TRAFILATURA_PIN = "2.3.1"
 PYTHON_MIN = (3, 10)
 COMPATIBLE_MAJOR = 2
 USER_AGENT = "scraper-viewer/candidate (+https://trafilatura.readthedocs.io/)"
-MAC_OUTPUT_DIR = "/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer"
+MAC_OUTPUT_DIR = "/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer"
 MAC_OUTPUT_ENV = "SCRAPER_VIEWER_OUTPUT_DIR"
 
 MAX_BYTES = 5 * 1024 * 1024
@@ -32,7 +32,8 @@ LOSS_WARNING = (
 def output_directory(target, home=None):
     """Return the directory that receives JSON output for ``target``.
 
-    The Mac setting defaults to the d11 scraper-viewer data folder.
+    The Mac setting defaults to the d11 scraper-viewer data folder
+    outside the lean-input repo.
     ``SCRAPER_VIEWER_OUTPUT_DIR`` overrides that default. The bot target
     keeps ``~/Tools/lean-input/output``.
     """

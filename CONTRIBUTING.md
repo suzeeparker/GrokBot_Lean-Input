@@ -28,7 +28,7 @@ This is the repository standard.
 - A tool skill folder that exists has a `scripts` directory and a `SKILL.md`. Paired bot and Mac instructions live in `bot/SKILL.md` and `cursor/SKILL.md`.
 - Do not add empty placeholder folders for tools that are not implemented yet.
 - Folders whose names contain `+` or `-` are not Python packages. Run scripts by path. Imports add the script directory to `sys.path` from the file's own location.
-- Installed skill names do not use the `b##` prefix. `scraper-viewer` stays that name after install. `lean-input-trafilatura` is a deprecated invocation alias for one release. Mac paths stay `~/.cursor/skills/<skill>/`, `~/Tools/lean-input/.venv/`, and `~/.local/bin/`. Mac JSON output goes to `/Users/Shared/Repos/GrokBot_/lean-input/client1/+data/DBMSs/JSONs/d11_scraper-viewer/`. Bot helpers stay under `~/Tools/lean-input-bot/`, and bot JSON output stays `~/Tools/lean-input/output/`.
+- Installed skill names do not use the `b##` prefix. `scraper-viewer` stays that name after install. `lean-input-trafilatura` is a deprecated invocation alias for one release. Mac paths stay `~/.cursor/skills/<skill>/`, `~/Tools/lean-input/.venv/`, and `~/.local/bin/`. Mac JSON output goes to `/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer/`, outside the lean-input repo. Bot helpers stay under `~/Tools/lean-input-bot/`, and bot JSON output stays `~/Tools/lean-input/output/`.
 
 Planned folder names, created only when that tool has files:
 
