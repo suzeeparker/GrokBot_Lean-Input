@@ -16,8 +16,8 @@ Run only on the bot computer. Do not target the owner's Mac, do not embed a mach
 - Base tools: `$HOME/Tools/lean-input-bot/`
 - Virtual environment: `$HOME/Tools/lean-input-bot/.venv/`
 - Interpreter: `$HOME/Tools/lean-input-bot/.venv/bin/python`
-- Helpers: `$HOME/Tools/lean-input-bot/runtime/scraper-viewer/`
-- Skill text copy (not registration): `$HOME/Tools/lean-input-bot/skill-source/scraper-viewer/SKILL.md`
+- Skill folder: `$HOME/Tools/lean-input-bot/scraper-viewer/` (`SKILL.md`, `scripts/`, `docs/`)
+- Helpers: `$HOME/Tools/lean-input-bot/scraper-viewer/scripts/`
 - Manifest: `$HOME/Tools/lean-input-bot/manifests/scraper-viewer.json`
 - Output: `$HOME/Tools/lean-input/output/`
 
@@ -31,7 +31,7 @@ When the helper exists, pass the original user text unchanged:
 
 ```sh
 "$HOME/Tools/lean-input-bot/.venv/bin/python" \
-  "$HOME/Tools/lean-input-bot/runtime/scraper-viewer/actions.py" \
+  "$HOME/Tools/lean-input-bot/scraper-viewer/scripts/actions.py" \
   --target bot \
   --home "$HOME" \
   --message "<original user text>"
@@ -45,12 +45,12 @@ If that helper is missing, this skill is in context but the runtime is not insta
 
 Installing changes this computer. Show the plan before changing anything.
 
-1. Use the unpacked candidate directory (it has `runtime/install_runtime.py`, `SKILL.md`, and `CANDIDATE.json`) or, only in a development checkout, the repository root. Do not clone the repository onto this computer as the install.
+1. Use the unpacked candidate directory (it has `scripts/install_runtime.py`, `SKILL.md`, and `CANDIDATE.json`) or, only in a development checkout, `+skills/b11_scraper-viewer/bot`. Do not clone the repository onto this computer as the install. The skill folder does not contain a virtual environment.
 2. Choose the absolute path of a Python 3.10 or newer interpreter with `venv` and `ssl`. Pass that absolute path. Do not install Homebrew, a compiler, or a system package automatically.
 3. Run the plan with the base interpreter, not with the virtual environment, and without `--approve`:
 
 ```sh
-"$BASE_PYTHON" "$UNPACKED/runtime/install_runtime.py" install \
+"$BASE_PYTHON" "$UNPACKED/scripts/install_runtime.py" install \
   --target bot \
   --home "$HOME" \
   --source-root "$UNPACKED" \
@@ -71,7 +71,7 @@ Run uninstall once without confirmation and show the owner every managed path pl
 
 ```sh
 "$HOME/Tools/lean-input-bot/.venv/bin/python" \
-  "$HOME/Tools/lean-input-bot/runtime/scraper-viewer/actions.py" \
+  "$HOME/Tools/lean-input-bot/scraper-viewer/scripts/actions.py" \
   --target bot --home "$HOME" --message "uninstall"
 ```
 

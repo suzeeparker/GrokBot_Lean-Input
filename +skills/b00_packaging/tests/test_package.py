@@ -31,7 +31,7 @@ class PackageTests(unittest.TestCase):
             bot_skill = (built["trees"]["bot"] / "SKILL.md").read_text(encoding="utf-8")
             mac_skill = (built["trees"]["mac"] / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("Grok Bot computer", bot_skill)
-            self.assertIn("Cursor on this Mac", mac_skill)
+            self.assertIn("macOS", mac_skill)
             self.assertNotEqual(bot_skill, mac_skill)
             for archive in built["archives"].values():
                 with zipfile.ZipFile(archive) as handle:

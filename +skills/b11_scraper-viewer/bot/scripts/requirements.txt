@@ -1,0 +1,5 @@
+# Direct dependency only. A fresh install uses this exact version.
+# A compatible preexisting 2.x install is reused and is not upgraded.
+# Transitive packages are resolved by pip and recorded in the install manifest.
+# Platform wheels differ between Linux and macOS; do not treat a Linux freeze as a Mac lock.
+trafilatura==2.3.1

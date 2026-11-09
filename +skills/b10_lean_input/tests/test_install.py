@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,9 +12,32 @@ import sys
 import tempfile
 import unittest
 
-ROOT = Path(__file__).resolve().parents[3]
-SCRIPTS = ROOT / "+skills" / "b10_lean_input" / "scripts"
+PACKAGE = Path(__file__).resolve().parents[1]
+SCRIPTS = PACKAGE / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+
+
+def repo_root():
+    for parent in PACKAGE.parents:
+        if (parent / "CONTRIBUTING.md").is_file() and (parent / "+skills").is_dir():
+            return parent
+    raise AssertionError("repository root not found")
+
+
+def install_source(target):
+    """Use this platform folder when it is a self-contained skill, else the repo."""
+    if (PACKAGE / "SKILL.md").is_file():
+        if PACKAGE.name != target:
+            return None
+        return PACKAGE
+    return repo_root()
+
+
+def source_for(target):
+    source = install_source(target)
+    if source is None:
+        raise unittest.SkipTest(f"{PACKAGE.name} does not install the {target} target")
+    return source
 
 import install_runtime  # noqa: E402
 from install_runtime import InstallError  # noqa: E402
@@ -46,7 +70,7 @@ class InstallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp) / "home"
             home.mkdir()
-            payload = install_runtime.install(home, "mac", ROOT, REVISION, PYTHON, approve=False)
+            payload = install_runtime.install(home, "mac", source_for("mac"), REVISION, PYTHON, approve=False)
             self.assertEqual(payload["approval"], "required")
             self.assertFalse((home / "Tools").exists())
             self.assertFalse((home / ".cursor").exists())
@@ -58,7 +82,7 @@ class InstallTests(unittest.TestCase):
             skill.parent.mkdir(parents=True)
             skill.write_text("user notes\n", encoding="utf-8")
             with self.assertRaises(InstallError) as caught:
-                install_runtime.install(home, "mac", ROOT, REVISION, PYTHON, approve=True)
+                install_runtime.install(home, "mac", source_for("mac"), REVISION, PYTHON, approve=True)
             self.assertIn("not owned", str(caught.exception))
             self.assertEqual(skill.read_text(encoding="utf-8"), "user notes\n")
             self.assertFalse(install_runtime.destinations(home, "mac")["runtime"].exists())
@@ -71,7 +95,7 @@ class InstallTests(unittest.TestCase):
             install_runtime.probe_python = lambda _exe: (True, "3.12.3", "test")
             install_runtime.probe_trafilatura = lambda _exe: (True, "1.12.2", "")
             with self.assertRaises(InstallError) as caught:
-                install_runtime.install(home, "bot", ROOT, REVISION, PYTHON, approve=True)
+                install_runtime.install(home, "bot", source_for("bot"), REVISION, PYTHON, approve=True)
             self.assertIn("not upgraded", str(caught.exception))
             self.assertTrue((venv / "pyvenv.cfg").is_file())
             self.assertFalse(install_runtime.destinations(home, "bot")["runtime"].exists())
@@ -88,7 +112,7 @@ class InstallTests(unittest.TestCase):
                 raise AssertionError("pip should not run for a compatible preexisting install")
 
             install_runtime.pip_install_pinned = fail_pip
-            first = install_runtime.install(home, "mac", ROOT, REVISION, PYTHON, approve=True)
+            first = install_runtime.install(home, "mac", source_for("mac"), REVISION, PYTHON, approve=True)
             self.assertEqual(first["result"], "installed")
             self.assertEqual(first["dependency"]["ownership"], "preexisting-reused")
             self.assertEqual(first["dependency"]["version"], "2.2.0")
@@ -104,14 +128,14 @@ class InstallTests(unittest.TestCase):
             other.parent.mkdir(parents=True)
             other.write_text("other\n", encoding="utf-8")
             mtimes = (installed.stat().st_mtime_ns, dest["skill"].stat().st_mtime_ns)
-            second = install_runtime.install(home, "mac", ROOT, REVISION, PYTHON, approve=True)
+            second = install_runtime.install(home, "mac", source_for("mac"), REVISION, PYTHON, approve=True)
             self.assertEqual(second["result"], "unchanged")
             self.assertEqual(mtimes, (installed.stat().st_mtime_ns, dest["skill"].stat().st_mtime_ns))
             installed.write_text("local edit\n", encoding="utf-8")
             with self.assertRaises(InstallError):
-                install_runtime.install(home, "mac", ROOT, REVISION, PYTHON, approve=True)
+                install_runtime.install(home, "mac", source_for("mac"), REVISION, PYTHON, approve=True)
             self.assertEqual(installed.read_text(encoding="utf-8"), "local edit\n")
-            updated = install_runtime.install(home, "mac", ROOT, REVISION, PYTHON, approve=True, update=True)
+            updated = install_runtime.install(home, "mac", source_for("mac"), REVISION, PYTHON, approve=True, update=True)
             self.assertEqual(updated["result"], "updated")
             self.assertEqual(installed.read_bytes(), source)
             manifest = json.loads(dest["manifest"].read_text(encoding="utf-8"))
@@ -139,14 +163,14 @@ class InstallTests(unittest.TestCase):
 
             install_runtime.pip_install_pinned = boom
             with self.assertRaises(InstallError):
-                install_runtime.install(home, "bot", ROOT, REVISION, PYTHON, approve=True)
+                install_runtime.install(home, "bot", source_for("bot"), REVISION, PYTHON, approve=True)
             self.assertFalse((home / "Tools").exists())
 
     def test_real_venv_install_is_idempotent_and_uninstall_keeps_it(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp) / "home"
             home.mkdir()
-            first = install_runtime.install(home, "bot", ROOT, REVISION, PYTHON, approve=True)
+            first = install_runtime.install(home, "bot", source_for("bot"), REVISION, PYTHON, approve=True)
             self.assertEqual(first["result"], "installed")
             self.assertEqual(first["dependency"]["version"], "2.3.1")
             self.assertEqual(first["dependency"]["ownership"], "installed-by-lean-input")
@@ -163,7 +187,7 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(probe.stdout.strip(), "2.3.1")
             helper = install_runtime.destinations(home, "bot")["runtime"] / "extract_url.py"
             stamp = helper.stat().st_mtime_ns
-            second = install_runtime.install(home, "bot", ROOT, REVISION, PYTHON, approve=True)
+            second = install_runtime.install(home, "bot", source_for("bot"), REVISION, PYTHON, approve=True)
             self.assertEqual(second["result"], "unchanged")
             self.assertEqual(helper.stat().st_mtime_ns, stamp)
             output = home / "Tools" / "lean-input" / "output"
@@ -180,6 +204,41 @@ class InstallTests(unittest.TestCase):
                 text=True,
             )
             self.assertEqual(probe.stdout.strip(), "2.3.1")
+
+    def test_migration_retires_matching_old_files_and_keeps_changed_ones(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            old = home / "Tools" / "lean-input" / "runtime" / "scraper-viewer" / "extract_url.py"
+            old.parent.mkdir(parents=True)
+            old.write_text("managed old helper\n", encoding="utf-8")
+            changed = old.parent / "local.py"
+            changed.write_text("leave me\n", encoding="utf-8")
+            dest = install_runtime.destinations(home, "mac")
+            dest["manifest"].parent.mkdir(parents=True)
+            manifest = {
+                "schema_version": 1,
+                "component": "scraper-viewer",
+                "target": "mac",
+                "files": [
+                    {"path": str(old.resolve()), "sha256": hashlib.sha256(old.read_bytes()).hexdigest()},
+                    {"path": str(changed.resolve()), "sha256": "0" * 64},
+                ],
+                "managed_directories": [str(old.parent.resolve())],
+                "dependency": {"ownership": "preexisting-reused", "version": "2.2.0"},
+            }
+            dest["manifest"].write_text(json.dumps(manifest), encoding="utf-8")
+            _fake_venv(dest["venv"])
+            install_runtime.probe_python = lambda _exe: (True, "3.12.3", "test")
+            install_runtime.probe_trafilatura = lambda _exe: (True, "2.2.0", "")
+            install_runtime.pip_install_pinned = lambda _python: (_ for _ in ()).throw(AssertionError("pip"))
+            result = install_runtime.install(home, "mac", source_for("mac"), REVISION, PYTHON, approve=True)
+            self.assertEqual(result["result"], "updated")
+            self.assertFalse(old.exists())
+            self.assertEqual(changed.read_text(encoding="utf-8"), "leave me\n")
+            self.assertTrue((dest["scripts"] / "extract_url.py").is_file())
+            self.assertTrue(dest["skill"].is_file())
+            self.assertTrue((dest["skill_root"] / "docs" / "Onboarding.md").is_file())
+            self.assertNotIn(str(changed.resolve()), json.loads(dest["manifest"].read_text())["files"].__repr__())
 
     def test_bot_registration_note_names_the_skill_library(self):
         note = install_runtime._registration("bot")["note"]

@@ -14,8 +14,8 @@ import threading
 import unittest
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[3]
-SCRIPTS = ROOT / "+skills" / "b10_lean_input" / "scripts"
+PACKAGE = Path(__file__).resolve().parents[1]
+SCRIPTS = PACKAGE / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import extract_url as m  # noqa: E402

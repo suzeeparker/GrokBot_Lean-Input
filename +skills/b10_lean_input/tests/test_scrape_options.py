@@ -7,9 +7,8 @@ import sys
 import tempfile
 import unittest
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "+skills" / "b10_lean_input" / "scripts"))
+PACKAGE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PACKAGE / "scripts"))
 
 import actions  # noqa: E402
 import scrape_options as scrape  # noqa: E402

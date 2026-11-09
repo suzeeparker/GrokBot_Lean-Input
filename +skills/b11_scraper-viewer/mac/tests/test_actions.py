@@ -1,0 +1,153 @@
+"""Action-word parsing and read-only or missing-runtime dispatch."""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+PACKAGE = Path(__file__).resolve().parents[1]
+SCRIPTS = PACKAGE / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+import actions  # noqa: E402
+import install_runtime  # noqa: E402
+
+
+class ParseTests(unittest.TestCase):
+    def test_initial_word_only(self):
+        cases = {
+            "install": ("install", ""),
+            "Install": ("install", ""),
+            "uninstall please": ("uninstall", "please"),
+            "explain": ("explain", ""),
+            "do extract https://example.com": ("do", "extract https://example.com"),
+            "https://example.com/a": ("do", "https://example.com/a"),
+            "extract https://example.com": ("do", "extract https://example.com"),
+            "scraper-viewer install": ("install", ""),
+            "lean-input-trafilatura install": ("install", ""),
+            "lean-input-trafilatura https://example.com/": ("do", "https://example.com/"),
+            "# scraper-viewer explain": ("explain", ""),
+            "scraper-viewer https://example.com": ("do", "https://example.com"),
+            "installing packages": ("do", "installing packages"),
+            "do": ("do", ""),
+            "scrape": ("do", ""),
+            "Scrape": ("do", ""),
+            "scrape https://example.com/": ("do", "https://example.com/"),
+            "scraper-viewer scrape https://example.com/": ("do", "https://example.com/"),
+            "do scrape https://example.com/article": ("do", "scrape https://example.com/article"),
+            "scraping https://example.com/article": ("do", "scraping https://example.com/article"),
+            "  explain  ": ("explain", ""),
+            "do install": ("do", "install"),
+            "install,": ("do", "install,"),
+            "": ("do", ""),
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(actions.parse_dispatch(text), expected)
+
+    def test_task_url_output_and_retention(self):
+        urls, output, retain = actions.parse_task(
+            'extract https://example.com/a. output "/tmp/my file.json" retain html extra https://example.org/b'
+        )
+        self.assertEqual(urls, ["https://example.com/a", "https://example.org/b"])
+        self.assertEqual(output, "/tmp/my file.json")
+        self.assertTrue(retain)
+        urls, output, retain = actions.parse_task("www.sicomm.net")
+        self.assertEqual(urls, ["www.sicomm.net"])
+        self.assertIsNone(output)
+        self.assertFalse(retain)
+        urls, _output, _retain = actions.parse_task("http://example.com/a")
+        self.assertEqual(urls, ["http://example.com/a"])
+
+
+class DispatchTests(unittest.TestCase):
+    def test_explain_makes_no_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            before = list(Path(tmp).rglob("*"))
+            code = actions.dispatch("explain the output", home, "mac")
+            self.assertEqual(code, 0)
+            self.assertEqual(list(Path(tmp).rglob("*")), before)
+            self.assertFalse(home.exists())
+
+    def test_do_offers_setup_without_installing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            home.mkdir()
+            code = actions.dispatch("https://example.com/", home, "bot")
+            self.assertEqual(code, 10)
+            self.assertFalse((home / "Tools").exists())
+
+    def test_do_without_url_does_not_fetch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            runtime = install_runtime.destinations(home, "mac")["runtime"]
+            runtime.mkdir(parents=True)
+            (runtime / "extract_url.py").write_text("# placeholder\n", encoding="utf-8")
+            python = install_runtime.destinations(home, "mac")["venv"] / "bin" / "python"
+            python.parent.mkdir(parents=True)
+            python.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            python.chmod(0o755)
+            code = actions.dispatch("do install", home, "mac")
+            self.assertEqual(code, 2)
+
+    def test_do_passes_bot_target_to_extractor(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            runtime = install_runtime.destinations(home, "bot")["runtime"]
+            runtime.mkdir(parents=True)
+            (runtime / "scrape_options.py").write_text("# placeholder\n", encoding="utf-8")
+            python = install_runtime.destinations(home, "bot")["venv"] / "bin" / "python"
+            python.parent.mkdir(parents=True)
+            log = home / "argv.txt"
+            python.write_text(
+                "#!/bin/sh\nprintf '%s\\n' \"$@\" > " + str(log) + "\nexit 0\n",
+                encoding="utf-8",
+            )
+            python.chmod(0o755)
+            code = actions.dispatch("https://example.com/article", home, "bot")
+            self.assertEqual(code, 0)
+            recorded = log.read_text(encoding="utf-8").splitlines()
+            self.assertIn("--target", recorded)
+            self.assertEqual(recorded[recorded.index("--target") + 1], "bot")
+            self.assertIn("page", recorded)
+
+    def test_uninstall_without_manifest_removes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            home.mkdir()
+            marker = home / "keep.txt"
+            marker.write_text("keep", encoding="utf-8")
+            code = actions.dispatch("uninstall", home, "mac", confirm="YES")
+            self.assertEqual(code, 0)
+            self.assertEqual(marker.read_text(encoding="utf-8"), "keep")
+
+    def test_cli_explain_is_read_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPTS / "actions.py"),
+                    "--message",
+                    "explain",
+                    "--target",
+                    "bot",
+                    "--home",
+                    str(Path(tmp) / "absent"),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+                env={**os.environ, "HOME": tmp},
+            )
+            self.assertEqual(proc.returncode, 0)
+            self.assertIn("did not change files", proc.stdout)
+            self.assertFalse((Path(tmp) / "absent").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
