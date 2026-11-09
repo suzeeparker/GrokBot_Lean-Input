@@ -40,7 +40,7 @@ The tradeoff: one canonical copy avoids drift, and the delivered folders stay se
 | Bot helpers | `~/Tools/lean-input-bot/runtime/scraper-viewer/` | `~/Tools/lean-input-bot/scraper-viewer/scripts/` |
 | Bot skill text | `~/Tools/lean-input-bot/skill-source/scraper-viewer/SKILL.md` | `~/Tools/lean-input-bot/scraper-viewer/SKILL.md` |
 | Mac helpers | `~/Tools/lean-input/runtime/scraper-viewer/` | `~/.cursor/skills/scraper-viewer/scripts/` |
-| Mac skill | `~/.cursor/skills/scraper-viewer/SKILL.md` only | `~/.cursor/skills/scraper-viewer/` with scripts and docs |
+| Mac skill | `~/.cursor/skills/scraper-viewer/SKILL.md` only | `~/.cursor/skills/scraper-viewer/` with `scripts/`, `docs/`, and `tests/` |
 | Venv | unchanged, outside the skill | unchanged, outside the skill |
 | Bot output | `~/Tools/lean-input/output/` | same |
 | Mac output | `/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer/` | same. `SCRAPER_VIEWER_OUTPUT_DIR` still overrides it |
@@ -58,6 +58,7 @@ An approved install of this candidate:
 - Leaves a changed file where it is and does not overwrite it.
 - Does not delete the virtual environment, Trafilatura, output JSON, or `d11_files.js`.
 - Replaces `SKILL.md` only when `--update` is passed, because that path already exists and its bytes differ.
+- Does not remove an older `lean-input-trafilatura` manifest or its runtime files. The plan lists them as preserved. A matching checksum is `legacy-owned-preserved`. A changed file is `legacy-modified-preserved`. Neither is deleted, and a skill-library entry is not changed. A separate confirmation would be required before any cleanup of that older component. This installer does not perform that cleanup.
 
 Candidate zip files in this checkout are not a GitHub release. Publishing a release archive is still pending.
 

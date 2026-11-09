@@ -142,6 +142,12 @@ def resolve_source(root, target):
     if "Onboarding.md" not in docs and layout == "legacy-package" and (base / "docs" / "Onboarding.md").is_file():
         docs["Onboarding.md"] = base / "docs" / "Onboarding.md"
     files.update({f"docs/{name}": path for name, path in docs.items()})
+    tests_dir = base / "tests"
+    if tests_dir.is_dir():
+        for path in sorted(item for item in tests_dir.rglob("*") if item.is_file()):
+            if "__pycache__" in path.parts or path.suffix == ".pyc":
+                continue
+            files["tests/" + path.relative_to(tests_dir).as_posix()] = path
     required = [files[name] for name in RUNTIME_FILES] + [files["SKILL.md"]]
     if "docs/Onboarding.md" in files:
         required.append(files["docs/Onboarding.md"])
@@ -174,6 +180,42 @@ def resolve_revision(source, requested):
     return requested
 
 
+def legacy_manifest_path(dest):
+    return dest["manifest"].parent / "lean-input-trafilatura.json"
+
+
+def legacy_report(dest):
+    """Describe the previous component. This install does not delete it.
+
+    A modified helper, the virtual environment, output files, and a skill-library
+    entry are left untouched. Removing the old component needs a separate
+    confirmation that is not part of this command.
+    """
+    path = legacy_manifest_path(dest)
+    if not path.is_file():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return [{"path": str(path), "action": "legacy-unreadable"}]
+    if data.get("component") != "lean-input-trafilatura":
+        return [{"path": str(path), "action": "legacy-unrecognized"}]
+    items = [{"path": str(path.resolve()), "action": "legacy-manifest-preserved"}]
+    for entry in data.get("files", []):
+        file_path = Path(entry.get("path", ""))
+        recorded = entry.get("sha256")
+        if file_path.is_symlink():
+            action = "legacy-symlink-preserved"
+        elif not file_path.exists():
+            action = "legacy-absent"
+        elif not recorded or sha256_file(file_path) != recorded:
+            action = "legacy-modified-preserved"
+        else:
+            action = "legacy-owned-preserved"
+        items.append({"path": str(file_path), "action": action})
+    return items
+
+
 def load_manifest(path: Path):
     if not path.is_file():
         return None
@@ -200,6 +242,9 @@ def desired_pairs(source, dest):
     pairs.append((source["files"]["SKILL.md"], dest["skill"]))
     for name in source.get("docs", []):
         pairs.append((source["files"][f"docs/{name}"], dest["skill_root"] / "docs" / name))
+    for key, src in source["files"].items():
+        if key.startswith("tests/"):
+            pairs.append((src, dest["skill_root"] / key))
     return pairs
 
 
@@ -456,6 +501,8 @@ def _build_manifest(target, revision, layout, base_python, venv_python, venv_own
             str(dest["skill_root"]),
             str(dest["scripts"]),
             str(dest["skill_root"] / "docs"),
+            str(dest["skill_root"] / "tests"),
+            str(dest["skill_root"] / "tests" / "fixtures"),
             str(dest["manifest"].parent),
         }
     )
@@ -512,6 +559,7 @@ def install(home, target, source_root, source_revision, python, approve=False, u
     if blocked:
         raise InstallError(blocked[0]["reason"])
     retiring = retirement_actions(existing, [item["path"] for item in classified])
+    legacy = legacy_report(dest)
     venv_info = inspect_venv(dest["venv"], python)
     dep = dependency_plan(venv_info["python"], venv_info["action"] == "reuse")
     if dep["action"] == "reuse" and existing and existing.get("dependency", {}).get("ownership") == "installed-by-lean-input":
@@ -538,7 +586,8 @@ def install(home, target, source_root, source_revision, python, approve=False, u
         "source_revision": revision,
         "source_layout": source["layout"],
         "approval": "granted" if approve else "required",
-        "files": [{"path": item["path"], "action": item["action"]} for item in classified] + retiring,
+        "files": [{"path": item["path"], "action": item["action"]} for item in classified] + retiring + legacy,
+        "legacy": legacy,
         "venv": {"path": str(dest["venv"]), "action": venv_info["action"], "ownership": venv_ownership},
         "dependency": dep,
         "registration": prospective["registration"],

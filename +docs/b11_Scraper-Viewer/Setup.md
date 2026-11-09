@@ -53,6 +53,14 @@ python3 +skills/b00_packaging/scripts/build_candidates.py --revision "$(git rev-
 
 ## Approved install test on a target computer
 
-Use the absolute virtual-environment interpreter recorded in the manifest. From the installed helpers, the stdlib unit module can be copied from the candidate's sibling checkout only during development. On an installed machine, rerun extraction against a public URL the owner names and confirm the JSON and sidecar. The candidate archive does not include the fixture suite; the repository tests stay in the checkout.
+The candidate archive includes `tests/` and `fixtures/`. Install copies them into the skill folder and records them in the manifest. They are removed on uninstall only when the checksum still matches. The virtual environment stays outside the skill and is not in the archive.
+
+From the installed skill folder, using the interpreter recorded in the manifest:
+
+```sh
+"$INTERPRETER" -m unittest discover -s tests
+```
+
+That command does not need the repository. A Linux run is not Mac or Grok Bot app acceptance. On an installed machine, also rerun extraction against a public URL the owner names and confirm the JSON and sidecar.
 
 Linux results do not establish Mac or Grok Bot app acceptance.

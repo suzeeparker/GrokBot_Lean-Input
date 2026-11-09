@@ -88,6 +88,12 @@ If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do 
 
 Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 is a fetch or extraction failure, and an error JSON file was written. Exit 2 is a URL refused before any network attempt, and an error JSON file was still written, or an output path that was refused and not overwritten. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
 
+Installed tests live in `tests/` next to this file, including `fixtures/`. They are managed. Run them with the virtual environment, not with a copy of the repository:
+
+```sh
+"$HOME/Tools/lean-input/.venv/bin/python" -m unittest discover -s "$HOME/.cursor/skills/scraper-viewer/tests"
+```
+
 Default output is `/Users/Shared/Repos/GrokBot_/+data/DBMSs/JSONs/d11_scraper-viewer/page-<unique>.json`. The folder is created when it is missing. Page, seo, aeo, schema, and metrics JSON files from one run share that folder. After the run, `d11_files.js` in that folder is rewritten for the viewer. Set `SCRAPER_VIEWER_OUTPUT_DIR` to use a different folder. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
 
 ## Output
