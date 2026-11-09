@@ -28,7 +28,6 @@ from constants import (
     TOTAL_DEADLINE_SECONDS,
     USER_AGENT,
 )
-from keywords import top_keywords
 
 CHALLENGE_PHRASES = (
     "enable javascript",
@@ -63,7 +62,6 @@ def _empty_result(url):
         "author": None,
         "publication_date": None,
         "text": None,
-        "keywords": [],
         "status": "error",
         "warnings": [],
         "error": None,
@@ -354,14 +352,12 @@ def process(url, fetcher=None, extractor=None, allow_tunnel=False):
         result["author"] = extracted["author"]
         result["publication_date"] = extracted["publication_date"]
         result["text"] = extracted["text"]
-        result["keywords"] = top_keywords(result["text"], result["title"])
         result["warnings"].extend(extracted["warnings"])
         result["status"] = "success"
     except Exception as exc:
         result["error"] = str(exc)
         result["status"] = "error"
         result["text"] = None
-        result["keywords"] = []
     return result, html
 
 

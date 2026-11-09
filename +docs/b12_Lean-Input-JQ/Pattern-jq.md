@@ -27,3 +27,7 @@ This file is the pattern only. `lean-input-jq` is not implemented, and neither a
 - Tests use fixture JSON files, invalid JSON, and a refusal to overwrite. They do not need Trafilatura.
 
 Build that tool as its own skill pair after this Trafilatura slice has been accepted. Do not add it to this candidate.
+
+## Planned keyword check
+
+Not built yet. The owner keeps a saved keyword list, for example a plain text or JSON file under the Lean Input output or config folder. `lean-input-jq` will read a trafilatura result JSON, check its `title` and `text`, and report which saved keywords are present, with counts. Matching is case-insensitive and whole-word. Trafilatura itself does not rank or store keywords.

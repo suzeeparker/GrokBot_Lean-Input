@@ -1,6 +1,6 @@
 ---
 name: lean-input-trafilatura
-description: "Extract the main text and metadata of one public HTTP or HTTPS page into UTF-8 JSON with up to 10 frequency keywords and a character-count sidecar. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, or scrape, or says scrape and a public URL. scrape is an alias of do. The do action is implied when no action word is given. Runs on the Grok Bot computer only. Copying this file does not register the skill."
+description: "Extract the main text and metadata of one public HTTP or HTTPS page into UTF-8 JSON and a character-count sidecar. Use when the user invokes lean-input-trafilatura with install, uninstall, explain, do, or scrape, or says scrape and a public URL. scrape is an alias of do. The do action is implied when no action word is given. Runs on the Grok Bot computer only. Copying this file does not register the skill."
 ---
 
 # lean-input-trafilatura — Grok Bot computer
@@ -87,13 +87,13 @@ A public `http` or `https` URL is required. An output path is optional (`output 
 
 If `actions.py` exits 10, the runtime is missing. Repeat the offer and stop. Do not install in the same turn.
 
-`scrape <url>` is the same extraction as `do`. Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 is a fetch or extraction failure, and an error JSON file was written. Exit 2 is a URL refused before any network attempt, and an error JSON file was still written, or an output path that was refused and not overwritten. Read the JSON file, not raw HTML, and do not paste raw HTML into chat. On success, the chat reply includes the title, the output path, and the 10 keywords with their scores.
+`scrape <url>` is the same extraction as `do`. Run the URL only as an argument to the helper. Never interpolate it into a shell string. Check the exit status. Exit 0 is an extraction, not proof the page was complete. Exit 1 is a fetch or extraction failure, and an error JSON file was written. Exit 2 is a URL refused before any network attempt, and an error JSON file was still written, or an output path that was refused and not overwritten. Read the JSON file, not raw HTML, and do not paste raw HTML into chat.
 
 Default output is `$HOME/Tools/lean-input/output/page-<unique>.json`. The sibling `page-<unique>.metrics.json` holds the character counts. Optional source HTML is `page-<unique>.source.html`. Existing files are not overwritten.
 
 ## Output
 
-UTF-8 JSON fields: `requested_url`, `final_url`, `title`, `author`, `publication_date`, `text`, `keywords`, `status`, `warnings`, `error`. Missing metadata is null. `keywords` is at most 10 objects, `{"keyword": string, "score": number}`, most important first. The score is the word count in the extracted text plus 1 when that word also appears in the title. English stopwords, tokens shorter than 3 characters, and tokens with no letters are dropped. This is a frequency heuristic, not a semantic ranking, and it is weak for pages that are not in English. An error or empty text yields an empty list. The metrics sidecar is unchanged: `decoded_html_characters`, `extracted_text_characters`, and `serialized_json_characters`. The unit is Unicode code points. Do not report bytes, tokens, or estimated savings. JSON is not inherently shorter.
+UTF-8 JSON fields: `requested_url`, `final_url`, `title`, `author`, `publication_date`, `text`, `status`, `warnings`, `error`. Missing metadata is null. The metrics sidecar, not this JSON, stores `decoded_html_characters`, `extracted_text_characters`, and `serialized_json_characters`. The unit is Unicode code points. Do not report bytes, tokens, or estimated savings. JSON is not inherently shorter.
 
 ## Safety
 

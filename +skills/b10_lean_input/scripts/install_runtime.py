@@ -626,8 +626,6 @@ def explain(home, target):
         "  lean-input-trafilatura scrape https://example.com/",
         "  lean-input-trafilatura https://example.com/",
         "scrape is an alias of do and follows the same rules.",
-        "Keywords are at most 10 frequent words from the extracted text, with a small title boost.",
-        "That list is a frequency heuristic, not a semantic summary.",
         f"Interpreter: {interpreter}",
         f"Helpers: {dest['runtime']}",
         f"Skill file: {dest['skill']}",
